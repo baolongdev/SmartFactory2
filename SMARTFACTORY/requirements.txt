@@ -1,0 +1,62 @@
+# Core Flask Framework
+flask>=3.0.0
+flask-cors>=4.0.0
+Werkzeug>=3.0.0
+
+# MQTT Protocol (using paho-mqtt v2.x directly, NOT flask-mqtt)
+paho-mqtt>=2.0.0
+
+# Computer Vision & Image Processing
+opencv-python>=4.8.0
+opencv-contrib-python>=4.8.0
+
+# Scientific Computing
+numpy>=1.24.0
+scipy>=1.11.0
+
+# Image Processing & Manipulation
+Pillow>=10.0.0
+imageio>=2.31.0
+
+# Configuration & Environment Management
+python-dotenv>=1.0.0
+pyyaml>=6.0.0
+
+# System Monitoring & Resource Management
+psutil>=5.9.0
+
+# HTTP Requests & API Client
+requests>=2.31.0
+
+# Date & Time Utilities
+python-dateutil>=2.8.2
+
+# Testing Framework
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-flask>=1.2.0
+pytest-mock>=3.11.0
+
+# Production WSGI Server
+gunicorn>=21.0.0
+gevent>=23.9.0
+
+# Development Tools (optional but recommended)
+black>=23.0.0
+flake8>=6.0.0
+pylint>=3.0.0
+mypy>=1.5.0
+autopep8>=2.0.0
+
+# Logging & Monitoring
+colorlog>=6.7.0
+python-json-logger>=2.0.0
+
+# Data Serialization
+marshmallow>=3.20.0
+
+# Async Support (if needed)
+eventlet>=0.33.0
+
+# Security
+cryptography>=41.0.0

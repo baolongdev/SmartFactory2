@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Camera Dashboard</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet" href="static/css/style.css">
+</head>
+<body>
+
+<header>
+    <div class="title"><i class="fas fa-video"></i> Camera Dashboard</div>
+    <div class="status"><i class="fas fa-circle" style="color:gray;"></i> Checking...</div>
+    <div class="controls">
+        <button onclick="toggleFullscreen()" title="Fullscreen"><i class="fas fa-expand"></i></button>
+        <button onclick="emergencyStop()" title="Emergency Stop"><i class="fas fa-exclamation-triangle"></i></button>
+    </div>
+</header>
+
+<div class="main">
+    <div class="video-area">
+        <img id="video-stream" src="" alt="Camera Stream">
+        <div class="video-overlay"><span></span> LIVE</div>
+    </div>
+
+    <div class="sidebar">
+        <div class="camera-card">
+            <button onclick="startCamera()">Start Camera</button>
+            <button onclick="stopCamera()">Stop Camera</button>
+        </div>
+
+        <div class="camera-card">
+            <label>USB Camera:
+                <select id="usb-camera">
+                    <option value="0">Camera 0</option>
+                    <option value="1">Camera 1</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="camera-card">
+            <label>RTSP URL:
+                <input type="text" id="rtsp-url" placeholder="rtsp://...">
+            </label>
+        </div>
+
+        <div class="camera-card">
+            <label>Chọn Conveyor/User:
+                <select id="conveyor-select" onchange="pingConveyor(this.value)">
+                    <option value="0_SmartConvey2025">Conveyor 0</option>
+                    <option value="1_SmartConvey2025">Conveyor 1</option>
+                </select>
+            </label>
+            <div id="status-0_SmartConvey2025">--</div>
+            <div id="status-1_SmartConvey2025">--</div>
+        </div>
+
+
+        <div class="camera-card">
+            <h4><i class="fas fa-box"></i> Detected Objects</h4>
+            <ul id="detected-list" style="max-height:200px; overflow-y:auto; list-style:none; padding:0; font-size:14px;">
+                <li style="color:#888;">No objects detected</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script src="static/js/main.js"></script>
+</body>
+</html>

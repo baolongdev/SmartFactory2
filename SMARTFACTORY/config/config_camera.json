@@ -1,0 +1,76 @@
+{
+    "camera": {
+        "src": 0,
+        "width": 640,
+        "height": 480,
+        "fps": 30
+    },
+    "detection": {
+        "min_contour_area": 1500,
+        "max_detection_fps": 30
+    },
+    "tracker": {
+        "max_lost": 15,
+        "max_history": 20,
+        "match_dist": 80
+    },
+    "drawing": {
+        "show_fps": true
+    },
+    "colors": [
+        {
+            "name": "Red",
+            "lower": [
+                0,
+                120,
+                70
+            ],
+            "upper": [
+                10,
+                255,
+                255
+            ],
+            "bgr": [
+                0,
+                0,
+                255
+            ]
+        },
+        {
+            "name": "Green",
+            "lower": [
+                36,
+                50,
+                70
+            ],
+            "upper": [
+                89,
+                255,
+                255
+            ],
+            "bgr": [
+                0,
+                255,
+                0
+            ]
+        },
+        {
+            "name": "Blue",
+            "lower": [
+                94,
+                80,
+                2
+            ],
+            "upper": [
+                126,
+                255,
+                255
+            ],
+            "bgr": [
+                255,
+                0,
+                0
+            ]
+        }
+    ]
+}

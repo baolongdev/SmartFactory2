@@ -1,0 +1,5 @@
+{
+    "debug": true,
+    "camera_config": "config/config_camera.json",
+    "mqtt_config": "config/config_mqtt.json"
+}

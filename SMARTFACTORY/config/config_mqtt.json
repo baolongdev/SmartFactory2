@@ -1,0 +1,11 @@
+{
+    "mqtt_server": "mqtt.ohstem.vn",
+    "mqtt_port": 1883,
+    "mqtt_users": [
+        "0_SmartConvey2025",
+        "1_SmartConvey2025"
+    ],
+    "mqtt_password": "",
+    "cmd_topic": "V1",
+    "status_topic": "V2"
+}
