@@ -19,8 +19,18 @@ class CameraReader:
         self.lock = threading.Lock()
         self.thread = None
 
-        self._open_camera()
-        self._start_thread()
+        # NEW: detect IP camera stream
+        if isinstance(src, str) and src.startswith("http"):
+            from app.core.camera.mjpeg_reader import MJPEGReader
+            self.reader = MJPEGReader(src)
+            self.is_mjpeg = True
+            self.reader.start()
+            self.running = True
+        else:
+            self.is_mjpeg = False
+            self.cap = None
+            self._open_camera()
+            self._start_thread()
 
     def _open_camera(self):
         self.cap = cv2.VideoCapture(self.src)
@@ -55,13 +65,22 @@ class CameraReader:
             time.sleep(max(0, min_interval - elapsed))
 
     def read(self):
+        if self.is_mjpeg:
+            return self.reader.read()
+
         with self.lock:
             return self.frame.copy() if self.frame is not None else None
 
+
     def stop(self):
         self.running = False
+
+        if self.is_mjpeg:
+            self.reader.stop()
+            return
+
         if self.thread:
             self.thread.join(timeout=1)
         if self.cap:
             self.cap.release()
-        logger.info("Stopped camera reader.")
+

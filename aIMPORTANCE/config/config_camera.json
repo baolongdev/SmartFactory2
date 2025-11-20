@@ -1,25 +1,42 @@
 {
   "camera": {
     "src": 0,
-    "width": 640,
-    "height": 480,
-    "fps": 60
+    "width": 1280,
+    "height": 720,
+    "fps": 60,
+    "backend": null,
+    "buffer_size": 1,
+    "fourcc": "MJPG"
   },
   "detection": {
     "min_contour_area": 1500,
-    "max_detection_fps": 30
+    "max_detection_fps": 30,
+    "median_blur": 7,
+    "morph_kernel": 3,
+    "show_masks": false
   },
   "tracker": {
     "max_lost": 15,
     "max_history": 20,
-    "match_dist": 80
+    "match_dist": 80,
+    "use_kalman": true
   },
   "drawing": {
-    "show_fps": true
+    "show_fps": true,
+    "show_traj": true,
+    "thickness": 2,
+    "font_scale": 0.6
   },
   "colors": [
-    {"name": "RED", "lower": [0,120,120], "upper": [10,255,255], "bgr": [0,0,255]},
-    {"name": "GREEN", "lower": [40,70,70], "upper": [80,255,255], "bgr": [0,255,0]},
-    {"name": "BLUE", "lower": [90,70,70], "upper": [130,255,255], "bgr": [255,0,0]}
+    { "name": "red",   "lower": [170, 100, 80], "upper": [10, 255, 255], "bgr": [0, 0, 255] },
+    { "name": "green", "lower": [40, 100, 80],  "upper": [80, 255, 255], "bgr": [0, 255, 0] },
+    { "name": "blue",  "lower": [100, 120, 80], "upper": [130, 255, 255], "bgr": [255, 0, 0] }
+  ],
+  "lines": [
+    { "name": "Gate-1", "p1": [200, 100], "p2": [1000, 100], "direction": "both" },
+    { "name": "Gate-2", "p1": [200, 600], "p2": [1000, 600], "direction": "AtoB" }
+  ],
+  "zones": [
+    { "name": "Zone-A", "points": [[100,150],[600,150],[600,450],[100,450]] }
   ]
 }

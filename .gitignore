@@ -1,0 +1,22 @@
+# Build files
+dist/
+build/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Virtual environment
+venv/
+.env/
+
+# IDE files
+.vscode/
+.idea/
+
+# Logs
+*.log
+
+# OS junk files
+Thumbs.db
+.DS_Store

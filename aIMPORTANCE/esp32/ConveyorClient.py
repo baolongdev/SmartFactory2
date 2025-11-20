@@ -1,4 +1,3 @@
-# main_refactor.py
 from servo import *
 from mdv2 import *
 from mqtt_as import MQTTClient, config
@@ -31,7 +30,7 @@ class ConveyorConfig:
     mqtt_user = '0_SmartConvey2025'
     mqtt_password = ''
     speed_servo = 90
-    action_servo = 60
+    action_servo = 45
     default_servo = 0
     speed_motor = 70
     idle_interval_ms = 5000
@@ -57,11 +56,9 @@ class ConveyorBelt:
         self.motor = DCMotor(self.md, M1)
         self.led = Pins(D13_PIN)
         self.btn = aButton(BOOT_PIN)
-
-        # concurrency flag: nếu True thì hệ thống đang thực hiện 1 action
         self.busy = False
 
-        # MQTT Setup
+        # MQTT setup
         self.mqtt_cfg = config.copy()
         self.mqtt_cfg.update({
             'ssid': cfg.ssid,
@@ -71,8 +68,7 @@ class ConveyorBelt:
             'user': cfg.mqtt_user,
             'password': cfg.mqtt_password
         })
-        for t in cfg.mqtt_topics_cmd:
-            self.mqtt_cfg['topics'].append((t, self.on_mqtt_msg))
+        self.mqtt_cfg['topics'] = [(t, self.on_mqtt_msg) for t in cfg.mqtt_topics_cmd]
         self.mqtt = MQTTClient(self.mqtt_cfg)
         MQTTClient.DEBUG = True
 
@@ -80,11 +76,9 @@ class ConveyorBelt:
     # LED Control
     # ----------------------------------------
     def led_state(self, state):
-        # giả sử neopix & hex_to_rgb tồn tại
         try:
             neopix.show(0, hex_to_rgb(COLORS.get(state, '#000000')))
         except Exception:
-            # nếu không có neopix, vẫn in log
             pass
         print(f"[{utime.ticks_ms()} ms][LED] State={state}")
 
@@ -121,73 +115,61 @@ class ConveyorBelt:
         print(f"[{utime.ticks_ms()} ms] Init motor+servo done")
         self.led_state('READY')
 
-        # ----------------------------------------
-        # Perform Generic Action (refined - smooth return)
-        # ----------------------------------------
-        async def perform_action(self, servo=None, action_id=None, duration_ms=None):
-            # Nếu đang bận, báo BUSY
-            if self.busy:
-                print(f"[{utime.ticks_ms()} ms] Ignored action {action_id} because system is BUSY")
-                await self.send_status("BUSY", {"action": action_id})
-                return
-
-            self.busy = True
-            duration = duration_ms or getattr(self.cfg, f"action{action_id}_duration_ms", 1000)
-
-            try:
-                print(f"[{utime.ticks_ms()} ms] Start action {action_id}, duration={duration}")
-                self.led_state('RUN')
-
-                # 1️⃣ Đưa servo đến vị trí làm việc
-                if servo:
-                    try:
-                        servo.limit(min=0, max=self.cfg.action_servo)
-                    except Exception:
-                        pass
-                    print(f"[{utime.ticks_ms()} ms] Servo moving to {self.cfg.action_servo}")
-                    await servo.run_angle(self.cfg.action_servo, self.cfg.speed_servo)
-                    await asleep_ms(200)  # chờ ổn định
-
-                # 2️⃣ Chạy motor trong khoảng thời gian định sẵn
-                print(f"[{utime.ticks_ms()} ms] Motor running...")
-                self.motor.run(self.cfg.speed_motor)
-                await asleep_ms(duration)
-
-                # 3️⃣ Dừng motor, chờ ổn định trước khi trả servo
-                print(f"[{utime.ticks_ms()} ms] Motor stopping...")
-                self.motor.run(0)
-                await asleep_ms(300)  # đệm nhỏ để dừng hoàn toàn
-
-                # 4️⃣ Trả servo về vị trí mặc định MỘT LẦN duy nhất, mượt
-                if servo:
-                    print(f"[{utime.ticks_ms()} ms] Servo returning to {self.cfg.default_servo}")
-                    # di chuyển chậm hơn khi trả về
-                    smooth_speed = max(20, int(self.cfg.speed_servo * 0.5))
-                    await servo.run_angle(self.cfg.default_servo, smooth_speed)
-                    await asleep_ms(200)  # giữ ổn định sau khi trả
-
-                # 5️⃣ Kết thúc
-                self.led_state('IDLE')
-                await self.send_status('DONE', {'action': action_id})
-                print(f"[{utime.ticks_ms()} ms] ✅ Action {action_id} DONE")
-
-            except Exception as e:
-                try:
-                    self.motor.run(0)
-                except Exception:
-                    pass
-                self.led_state('ERROR')
-                await self.send_status('ERROR', {'action': action_id, 'error': str(e)})
-                print(f"[{utime.ticks_ms()} ms] ❌ Action {action_id} ERROR: {e}")
-
-            finally:
-                self.busy = False
-
-
-    async def idle_action(self, duration_ms=None):
-        # Nếu đang bận thì bỏ qua idle action
+    # ----------------------------------------
+    # Perform Generic Action
+    # ----------------------------------------
+    async def perform_action(self, servo=None, action_id=None, duration_ms=None):
         if self.busy:
-            # không log quá dày, chỉ in thỉnh thoảng nếu cần
+            print(f"[{utime.ticks_ms()} ms] Ignored action {action_id} because system is BUSY")
+            await self.send_status("BUSY", {"action": action_id})
+            return
+
+        self.busy = True
+        duration = duration_ms or getattr(self.cfg, f"action{action_id}_duration_ms", 1000)
+
+        try:
+            print(f"[{utime.ticks_ms()} ms] Start action {action_id}, duration={duration}")
+            self.led_state('RUN')
+
+            # 1️⃣ Servo di chuyển tới góc thao tác
+            if servo:
+                servo.limit(min=0, max=self.cfg.action_servo)
+                print(f"[{utime.ticks_ms()} ms] Servo moving to {self.cfg.action_servo}")
+                await servo.run_angle(self.cfg.action_servo, self.cfg.speed_servo)
+                await asleep_ms(300)
+
+            # 2️⃣ Chạy motor
+            self.motor.run(self.cfg.speed_motor)
+            await asleep_ms(duration)
+
+            # 3️⃣ Dừng motor và trả servo
+            self.motor.run(0)
+            await asleep_ms(200)
+            if servo:
+                print(f"[{utime.ticks_ms()} ms] Servo returning to {self.cfg.default_servo}")
+                smooth_speed = max(20, int(self.cfg.speed_servo * 0.5))
+                await servo.run_angle(self.cfg.default_servo, smooth_speed)
+                await asleep_ms(200)
+
+            # 4️⃣ Hoàn tất
+            self.led_state('IDLE')
+            await self.send_status('DONE', {'action': action_id})
+            print(f"[{utime.ticks_ms()} ms] ✅ Action {action_id} DONE")
+
+        except Exception as e:
+            self.motor.run(0)
+            self.led_state('ERROR')
+            await self.send_status('ERROR', {'action': action_id, 'error': str(e)})
+            print(f"[{utime.ticks_ms()} ms] ❌ Action {action_id} ERROR: {e}")
+
+        finally:
+            self.busy = False
+
+    # ----------------------------------------
+    # Idle Action
+    # ----------------------------------------
+    async def idle_action(self, duration_ms=None):
+        if self.busy:
             return
         duration = duration_ms or self.cfg.idle_duration_ms
         self.led_state('IDLE')
@@ -200,7 +182,6 @@ class ConveyorBelt:
     # MQTT Handler
     # ----------------------------------------
     async def on_mqtt_msg(self, topic, msg):
-        # topic may be e.g. 'V1' (because mqtt_as delivers topic part)
         msg_str = msg.decode() if isinstance(msg, bytes) else str(msg)
         action, duration = None, None
         try:
@@ -210,7 +191,6 @@ class ConveyorBelt:
         except Exception:
             action = int(msg_str) if msg_str.isdigit() else msg_str.upper()
 
-        # If system busy, respond BUSY (don't queue)
         if self.busy:
             print(f"[{utime.ticks_ms()} ms] Received action while BUSY: {action}")
             await self.send_status("BUSY", {"action": action})
@@ -221,7 +201,6 @@ class ConveyorBelt:
         elif action == 2:
             await self.perform_action(self.servo2, 2, duration)
         elif action == 3:
-            # action 3 has no servo, just motor-based action
             await self.perform_action(None, 3, duration)
         elif action == "PING":
             await self.send_status("READY")
@@ -233,42 +212,35 @@ class ConveyorBelt:
     # ----------------------------------------
     async def led_blink_task(self, interval_ms=500):
         while True:
-            # Nếu đang bận thì đợi, không chớp LED
             if not self.busy:
                 self.led_state('RUN')
                 await asleep_ms(interval_ms)
                 self.led_state('IDLE')
                 await asleep_ms(interval_ms)
             else:
-                # ngắn ngủi chờ để kiểm tra lại tình trạng busy
                 await asleep_ms(100)
 
     # ----------------------------------------
-    # Button Handlers
+    # Button Handler
     # ----------------------------------------
     async def handle_boot(self, pressed):
         if pressed:
-            # nếu đang bận thì bỏ qua hoặc bạn có thể queue
             if self.busy:
                 print(f"[{utime.ticks_ms()} ms] Boot pressed but system busy -> ignored")
                 return
             await self.perform_action(self.servo1, 1)
             await self.perform_action(self.servo2, 2)
         else:
-            # trả servo về 0 ngay (bỏ qua busy)
             self.motor.run(0)
-            try:
-                await self.servo1.run_angle(self.cfg.default_servo, self.cfg.speed_servo)
-            except Exception:
-                pass
-            try:
-                await self.servo2.run_angle(self.cfg.default_servo, self.cfg.speed_servo)
-            except Exception:
-                pass
+            for s in [self.servo1, self.servo2]:
+                try:
+                    await s.run_angle(self.cfg.default_servo, self.cfg.speed_servo)
+                except Exception:
+                    pass
             self.led_state('IDLE')
 
     # ----------------------------------------
-    # Setup
+    # Setup & Run
     # ----------------------------------------
     async def setup(self):
         await self.init_servo_motor()
@@ -278,19 +250,14 @@ class ConveyorBelt:
         self.led_state('READY')
         self.btn.pressed(lambda: create_task(self.handle_boot(True)))
         self.btn.released(lambda: create_task(self.handle_boot(False)))
-        # start blink task (it will not override when busy)
         create_task(self.led_blink_task())
 
-    # ----------------------------------------
-    # Main Loop
-    # ----------------------------------------
     async def run(self):
         await self.setup()
         last_idle = utime.ticks_ms()
         while True:
             now = utime.ticks_ms()
             if utime.ticks_diff(now, last_idle) > self.cfg.idle_interval_ms:
-                # only run idle_action when not busy
                 if not self.busy:
                     await self.idle_action()
                 last_idle = now

@@ -17,8 +17,21 @@ let cameraRunning = false;
 
 async function startCamera() {
     const videoEl = document.getElementById('video-stream');
+
+    // Lấy camera từ input
+    const usbIndex = document.getElementById('usb-camera').value;
+    const rtspUrl = document.getElementById('rtsp-url').value;
+
+    // Ưu tiên RTSP/HTTP URL
+    const source = rtspUrl.trim() !== "" ? rtspUrl.trim() : usbIndex;
+
     try {
-        const res = await fetch('/api/camera/start', { method: 'POST' });
+        const res = await fetch('/api/camera/start', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ src: source })
+        });
+
         const data = await res.json();
         if (data.status === 'success') {
             videoEl.src = "/api/camera/stream";
@@ -33,6 +46,7 @@ async function startCamera() {
         console.error(e);
     }
 }
+
 
 async function stopCamera() {
     const videoEl = document.getElementById('video-stream');

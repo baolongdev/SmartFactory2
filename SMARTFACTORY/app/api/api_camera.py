@@ -15,9 +15,23 @@ def require_camera_running(f):
 
 @api_camera.post("/start")
 def start_camera():
-    ok = camera_service.start()
-    current_app.logger.info(f"/camera/start called, result={ok}")
-    return jsonify({"status": "success", "message": "Camera started", "started": ok})
+    payload = {}
+    try:
+        payload = request.get_json() or {}
+    except:
+        pass
+
+    # Lấy src nếu FE gửi lên
+    src = payload.get("src")
+
+    ok = camera_service.start(src_override=src)
+
+    return jsonify({
+        "status": "success" if ok else "error",
+        "started": ok,
+        "message": f"Camera started with src={src}"
+    })
+
 
 @api_camera.post("/stop")
 def stop_camera():
@@ -82,3 +96,4 @@ def camera_detections():
             })
 
     return jsonify({"status": "success", "detections": detections})
+

@@ -1,6 +1,6 @@
 {
     "camera": {
-        "src": 0,
+        "src": "http://172.28.182.112:6677/videofeed",
         "width": 640,
         "height": 480,
         "fps": 30
