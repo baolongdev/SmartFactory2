@@ -10,4 +10,8 @@ class ConfigService:
     def get_mqtt_config(self):
         return self.app_cfg.mqtt_config
 
+    def get_color_config(self):
+        return self.app_cfg.color_config
+
+
 config_service = ConfigService()

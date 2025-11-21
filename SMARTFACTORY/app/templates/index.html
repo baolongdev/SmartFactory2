@@ -1,71 +1,172 @@
 <!DOCTYPE html>
 <html lang="vi">
+
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Camera Dashboard</title>
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-<link rel="stylesheet" href="static/css/style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartFactory Dashboard</title>
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="/static/css/style.css">
 </head>
+
 <body>
 
-<header>
-    <div class="title"><i class="fas fa-video"></i> Camera Dashboard</div>
-    <div class="status"><i class="fas fa-circle" style="color:gray;"></i> Checking...</div>
-    <div class="controls">
-        <button onclick="toggleFullscreen()" title="Fullscreen"><i class="fas fa-expand"></i></button>
-        <button onclick="emergencyStop()" title="Emergency Stop"><i class="fas fa-exclamation-triangle"></i></button>
+    <!-- HEADER -->
+    <header class="app-header">
+        <div class="header-left">
+            <h2><i class="fas fa-industry"></i> SmartFactory</h2>
+        </div>
+
+        <div class="header-center">
+            <div id="mqtt-status" class="status-chip">
+                <i class="fas fa-circle online"></i> MQTT Online
+            </div>
+
+            <div id="camera-status" class="status-chip">
+                <i class="fas fa-circle online"></i> Camera Running
+            </div>
+        </div>
+
+        <div class="header-right">
+            <button onclick="toggleFullscreen()" class="header-btn">
+                <i class="fas fa-expand"></i>
+            </button>
+
+            <button onclick="emergencyStop()" class="header-btn danger">
+                <i class="fas fa-skull-crossbones"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN CONTENT -->
+    <div class="container">
+
+        <!-- LEFT: VIDEO -->
+        <div class="video-panel">
+            <div class="video-wrapper">
+                <img id="video-stream" src="" alt="Camera Stream">
+                <div class="video-tag">LIVE</div>
+            </div>
+        </div>
+
+        <!-- RIGHT: CONTROL SIDEBAR -->
+        <div class="control-panel">
+
+            <!-- CAMERA SOURCE -->
+            <div class="section">
+                <h3><i class="fas fa-camera"></i> Camera Source</h3>
+
+                <label class="field">
+                    <span>Camera Type:</span>
+                    <select id="camera-type" onchange="switchCameraType()">
+                        <option value="usb">USB Camera</option>
+                        <option value="rtsp">RTSP / IP Camera</option>
+                    </select>
+                </label>
+
+                <div id="usb-group">
+                    <label class="field">
+                        <span>USB Index:</span>
+                        <select id="usb-camera">
+                        </select>
+                    </label>
+                </div>
+
+                <div id="rtsp-group" style="display:none;">
+                    <label class="field">
+                        <span>RTSP / URL:</span>
+                        <input id="rtsp-url" type="text" placeholder="rtsp:// or http://">
+                    </label>
+                </div>
+
+                <div class="btn-row">
+                    <button id="btn-start-camera" onclick="startCamera()" class="btn-primary">
+                        <i class="fas fa-play"></i> Start
+                    </button>
+
+                    <button id="btn-stop-camera" onclick="stopCamera()" class="btn-secondary">
+                        <i class="fas fa-stop"></i> Stop
+                    </button>
+                </div>
+            </div>
+
+            <!-- CONVEYOR -->
+            <div class="section">
+                <h3><i class="fas fa-dolly"></i> Conveyor System</h3>
+
+                <label class="field">
+                    <span>Select Conveyor:</span>
+                    <select id="conveyor-select" onchange="pingConveyor(this.value)">
+                        <option value="0_SmartConvey2025">Conveyor 0</option>
+                        <option value="1_SmartConvey2025">Conveyor 1</option>
+                    </select>
+                </label>
+
+                <div class="conveyor-status">
+                    <div id="status-0_SmartConvey2025" class="conv-item">--</div>
+                    <div id="status-1_SmartConvey2025" class="conv-item">--</div>
+                </div>
+            </div>
+
+            <!-- DETECTED OBJECTS -->
+            <div class="section">
+                <h3><i class="fas fa-eye"></i> Detected Objects</h3>
+
+                <ul id="detected-list" class="obj-list">
+                    <li class="placeholder">No objects detected</li>
+                </ul>
+            </div>
+
+            <!-- COLOR CONFIGURATION -->
+            <div class="section">
+                <h3><i class="fas fa-palette"></i> Color Configuration</h3>
+
+                <table class="color-table">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Action</th>
+                            <th>Duration (ms)</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="color-table-body">
+                        <tr>
+                            <td colspan="4" style="text-align:center; color:#777;">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <button class="btn-primary" onclick="addNewColorRow()">
+                    <i class="fas fa-plus"></i> Add Color
+                </button>
+
+                <button class="btn-secondary" onclick="saveColorConfig()">
+                    <i class="fas fa-save"></i> Save Changes
+                </button>
+            </div>
+
+            <!-- MQTT LOG -->
+            <div class="section">
+                <h3><i class="fas fa-terminal"></i> MQTT Log</h3>
+
+                <div id="mqtt-log" class="log-box">
+                    <div class="placeholder">No log yet...</div>
+                </div>
+
+                <button class="btn-secondary" onclick="clearMQTTLog()">
+                    <i class="fas fa-trash"></i> Clear Log
+                </button>
+            </div>
+        </div>
     </div>
-</header>
 
-<div class="main">
-    <div class="video-area">
-        <img id="video-stream" src="" alt="Camera Stream">
-        <div class="video-overlay"><span></span> LIVE</div>
-    </div>
-
-    <div class="sidebar">
-        <div class="camera-card">
-            <button onclick="startCamera()">Start Camera</button>
-            <button onclick="stopCamera()">Stop Camera</button>
-        </div>
-
-        <div class="camera-card">
-            <label>USB Camera:
-                <select id="usb-camera">
-                    <option value="0">Camera 0</option>
-                    <option value="1">Camera 1</option>
-                </select>
-            </label>
-        </div>
-
-        <div class="camera-card">
-            <label>RTSP URL:
-                <input type="text" id="rtsp-url" placeholder="rtsp://...">
-            </label>
-        </div>
-
-        <div class="camera-card">
-            <label>Chọn Conveyor/User:
-                <select id="conveyor-select" onchange="pingConveyor(this.value)">
-                    <option value="0_SmartConvey2025">Conveyor 0</option>
-                    <option value="1_SmartConvey2025">Conveyor 1</option>
-                </select>
-            </label>
-            <div id="status-0_SmartConvey2025">--</div>
-            <div id="status-1_SmartConvey2025">--</div>
-        </div>
-
-
-        <div class="camera-card">
-            <h4><i class="fas fa-box"></i> Detected Objects</h4>
-            <ul id="detected-list" style="max-height:200px; overflow-y:auto; list-style:none; padding:0; font-size:14px;">
-                <li style="color:#888;">No objects detected</li>
-            </ul>
-        </div>
-    </div>
-</div>
-
-<script src="static/js/main.js"></script>
+    <script type="module" src="/static/js/app.js"></script>
 </body>
+
 </html>

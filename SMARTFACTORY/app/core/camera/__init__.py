@@ -15,6 +15,7 @@ from .color_object import ColorObject
 from .color_detector import ColorDetector
 from .tracker import Tracker
 from .draw_manager import DrawManager
+from .mjpeg_reader import MJPEGReader
 from .pipeline import CameraPipeline
 
 __all__ = [
@@ -23,5 +24,6 @@ __all__ = [
     "ColorDetector",
     "Tracker",
     "DrawManager",
+    "MJPEGReader",
     "CameraPipeline",
 ]
