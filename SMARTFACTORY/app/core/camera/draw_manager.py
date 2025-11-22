@@ -15,7 +15,7 @@ class DrawManager:
     - hỗ trợ hiển thị FPS
     """
 
-    def __init__(self, tracker, show_fps=True, alpha=0.4, trajectory_ttl=3.0):
+    def __init__(self, tracker, show_fps=True, alpha=0.2, trajectory_ttl=3.0):
         self.tracker = tracker
         self.show_fps = show_fps
         self.alpha = alpha

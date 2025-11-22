@@ -1,0 +1,240 @@
+Dưới đây mình **giải thích rõ cách tạo Access Point (AP) cho Raspberry Pi khi không kết nối được Wi-Fi**, đồng thời **cung cấp luôn mẫu giao diện HTML + CSS theo đúng style bạn gửi** để làm captive portal cấu hình Wi-Fi.
+
+---
+
+# ✅ **1. Cách tạo Access Point (AP) cho Raspberry Pi khi không kết nối được Wi-Fi**
+
+Mục tiêu: Khi Rasp không kết nối được Wi-Fi → tự bật AP → người dùng vào web portal để nhập SSID + Password.
+
+## **A. Cài đặt gói cần thiết**
+
+```bash
+sudo apt update
+sudo apt install hostapd dnsmasq
+sudo systemctl unmask hostapd
+sudo systemctl enable hostapd
+```
+
+## **B. Cấu hình IP tĩnh cho wlan0**
+
+File:
+
+```bash
+sudo nano /etc/dhcpcd.conf
+```
+
+Thêm:
+
+```conf
+interface wlan0
+    static ip_address=192.168.4.1/24
+    nohook wpa_supplicant
+```
+
+Restart:
+
+```bash
+sudo systemctl restart dhcpcd
+```
+
+## **C. Cấu hình DHCP cho AP**
+
+Backup dnsmasq:
+
+```bash
+sudo mv /etc/dnsmasq.conf /etc/dnsmasq.conf.orig
+sudo nano /etc/dnsmasq.conf
+```
+
+Thêm:
+
+```conf
+interface=wlan0
+dhcp-range=192.168.4.2,192.168.4.20,255.255.255.0,24h
+```
+
+## **D. Cấu hình hostapd**
+
+```bash
+sudo nano /etc/hostapd/hostapd.conf
+```
+
+Ví dụ:
+
+```conf
+interface=wlan0
+driver=nl80211
+ssid=Raspberry-Setup
+hw_mode=g
+channel=7
+wmm_enabled=0
+auth_algs=1
+wpa=2
+wpa_passphrase=12345678
+wpa_key_mgmt=WPA-PSK
+rsn_pairwise=CCMP
+```
+
+Trỏ hostapd:
+
+```bash
+sudo nano /etc/default/hostapd
+```
+
+Thêm:
+
+```
+DAEMON_CONF="/etc/hostapd/hostapid.conf"
+```
+
+---
+
+# ✅ **2. Captive Portal – dùng lighttpd hoặc Flask**
+
+Bạn có thể dùng:
+
+* **Flask chạy Python** → tiện gửi SSID/password vào wpa_supplicant
+* Dùng **lighttpd + CGI** → đơn giản
+* Dùng **Node.js Express** → nếu quen
+
+Dưới đây mình làm bản **Flask** dễ tùy biến nhất.
+
+---
+
+# ✅ **3. Giao diện HTML theo đúng style CSS bạn đưa**
+
+## 👉 **Bạn chỉ cần tạo file: `/var/www/html/index.html` (hoặc Flask template)**
+
+### **HTML mẫu (rất đẹp + phù hợp CSS trên)**
+
+> ⚠️ Style bạn đưa quá dài nên mình **không nhắc lại CSS**, bạn chỉ cần copy đúng CSS của bạn vào `<style>…</style>`.
+
+```html
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Cấu hình Wi-Fi Raspberry Pi</title>
+
+<!-- Dán toàn bộ CSS bạn gửi vào đây -->
+<style>
+/* PASTE nguyên CSS của bạn ở đây */
+</style>
+</head>
+
+<body>
+    <header class="app-header">
+        <h2><span>📶</span> Thiết lập Wi-Fi cho Raspberry Pi</h2>
+        <div class="status-chip">Access Point Mode</div>
+    </header>
+
+    <div class="container">
+        <div class="video-panel">
+            <div class="video-wrapper">
+                <span class="video-tag">Wi-Fi Setup</span>
+                <p style="color:white">Không có video, chỉ minh họa layout</p>
+            </div>
+        </div>
+
+        <div class="control-panel">
+            <div class="section">
+                <h3>🔧 Nhập thông tin Wi-Fi</h3>
+                
+                <div class="field">
+                    <label>Tên Wi-Fi (SSID)</label>
+                    <input id="ssid" placeholder="Ví dụ: MyHomeWiFi">
+                </div>
+
+                <div class="field">
+                    <label>Mật khẩu</label>
+                    <input id="password" type="password" placeholder="Mật khẩu Wi-Fi">
+                </div>
+
+                <div class="btn-row">
+                    <button onclick="saveWifi()">Lưu & Kết nối</button>
+                </div>
+
+                <div class="log-box" id="log-area">
+                    Nhật ký hệ thống sẽ hiển thị tại đây...
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+function saveWifi() {
+    const ssid = document.getElementById("ssid").value;
+    const password = document.getElementById("password").value;
+
+    fetch("/api/save_wifi", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ ssid, password })
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById("log-area").innerText += "\n" + data.message;
+    });
+}
+</script>
+
+</body>
+</html>
+```
+
+---
+
+# ✅ **4. Flask backend – nhận SSID/Password & ghi vào Raspberry Pi**
+
+### File: `app.py`
+
+```python
+from flask import Flask, request, jsonify
+import os
+
+app = Flask(__name__)
+
+WPA_FILE = "/etc/wpa_supplicant/wpa_supplicant.conf"
+
+@app.post("/api/save_wifi")
+def save_wifi():
+    data = request.json
+    ssid = data["ssid"]
+    password = data["password"]
+
+    wpa_config = f'''
+network={{
+    ssid="{ssid}"
+    psk="{password}"
+}}
+'''
+
+    with open(WPA_FILE, "a") as f:
+        f.write(wpa_config)
+
+    os.system("systemctl restart wpa_supplicant")
+    return jsonify({"message": "Đã lưu! Rasp đang thử kết nối Wi-Fi..."})
+```
+
+### Chạy server
+
+```bash
+pip install flask
+sudo python3 app.py
+```
+
+---
+
+# ✅ **5. Logic hoạt động hoàn chỉnh**
+
+| Trạng thái                         | Hành động                     |
+| ---------------------------------- | ----------------------------- |
+| Nếu Wi-Fi **kết nối OK**           | Hoạt động bình thường         |
+| Nếu Wi-Fi **không kết nối**        | Rasp tự bật AP + Flask portal |
+| User truy cập                      | `http://192.168.4.1`          |
+| Nhập SSID/Password                 | Ghi vào `wpa_supplicant.conf` |
+| Rasp tự tắt AP + thử kết nối Wi-Fi | OK                            |
+
+---
+
+# 📌 Nếu bạn muốn mình tạo **bản hoàn chỉnh dạng project đầy đủ thư mục**, hoặc tạo **React/Web UI** đẹp hơn theo style của bạn → chỉ cần yêu cầu mình!
