@@ -61,3 +61,47 @@ export async function loadUSBCameras() {
         usbSelect.innerHTML = `<option value="">Error</option>`;
     }
 }
+
+
+// ========================= IMAGE TRANSFORM =========================
+
+// trạng thái transform
+let flipH = false;
+let flipV = false;
+let rotation = 0;
+
+function applyTransform() {
+    const img = document.getElementById("video-stream");
+    if (!img) return;
+
+    let transformString = "";
+
+    if (flipH) transformString += " scaleX(-1)";
+    if (flipV) transformString += " scaleY(-1)";
+    transformString += ` rotate(${rotation}deg)`;
+
+    img.style.transform = transformString;
+}
+
+// GẮN TOÀN CỤC (để HTML gọi được)
+window.flipHorizontal = function () {
+    flipH = !flipH;
+    applyTransform();
+};
+
+window.flipVertical = function () {
+    flipV = !flipV;
+    applyTransform();
+};
+
+window.rotateVideo = function () {
+    rotation = (rotation + 90) % 360;
+    applyTransform();
+};
+
+window.resetTransform = function () {
+    flipH = false;
+    flipV = false;
+    rotation = 0;
+    applyTransform();
+};

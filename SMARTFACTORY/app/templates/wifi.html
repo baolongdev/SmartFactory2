@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WiFi Settings</title>
+
+    <!-- Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Main CSS -->
+    <link rel="stylesheet" href="/static/css/style.css" />
+</head>
+
+<body>
+    <!-- HEADER -->
+    <header class="app-header">
+        <h2><i class="fas fa-wifi"></i> WiFi Settings</h2>
+    </header>
+
+    <!-- MAIN WRAPPER -->
+    <div class="container">
+
+        <!-- RIGHT PANEL: CURRENT STATUS (SẼ LÊN ĐẦU KHI MOBILE) -->
+        <div class="section wifi-status-section">
+            <h3><i class="fas fa-signal"></i> Current WiFi Status</h3>
+
+            <div id="current-wifi" class="status-box">
+                Loading...
+            </div>
+
+            <button onclick="loadCurrentWifi()" class="btn-primary">
+                <i class="fas fa-sync"></i> Refresh
+            </button>
+        </div>
+
+        <!-- LEFT PANEL: WIFI LIST + CONNECT FORM -->
+        <div class="control-panel">
+            <h3><i class="fas fa-search"></i> Nearby WiFi Networks</h3>
+
+            <button onclick="scanWiFi()" class="btn-primary">
+                <i class="fas fa-wifi"></i> Scan Now
+            </button>
+
+            <small style="font-size:12px; opacity:0.7;">Auto scan every 10s</small>
+
+            <!-- TABLE SCROLLABLE ON MOBILE -->
+            <div class="table-wrapper">
+                <table class="wifi-table" id="wifi-table">
+                    <thead>
+                        <tr>
+                            <th>SSID</th>
+                            <th>Signal</th>
+                            <th>Band</th>
+                            <th>Channel</th>
+                            <th>Security</th>
+                        </tr>
+                    </thead>
+                    <tbody id="wifi-table-body">
+                        <tr>
+                            <td colspan="5" style="text-align:center; opacity:0.7;">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <hr />
+
+            <h3><i class="fas fa-link"></i> Connect to WiFi</h3>
+
+            <div class="field">
+                <span>SSID:</span>
+                <input id="ssid-input" type="text" placeholder="Click a WiFi in the table" />
+            </div>
+
+            <div class="field" id="password-field">
+                <span>Password:</span>
+                <input id="password-input" type="password" placeholder="Password" />
+            </div>
+
+            <button id="btn-connect" onclick="connectWiFi()" class="btn-primary">
+                <i class="fas fa-link"></i> Connect
+            </button>
+
+            <div id="wifi-status" style="margin-top:10px; font-weight:bold;"></div>
+        </div>
+
+    </div>
+
+    <!-- SCRIPT -->
+    <script>
+        let wifiData = [];
+        let selectedRow = null;
+        const AUTO_SCAN_INTERVAL = 10000;
+
+        window.onload = () => {
+            scanWiFi();
+            loadCurrentWifi();
+            setInterval(scanWiFi, AUTO_SCAN_INTERVAL);
+            setInterval(loadCurrentWifi, AUTO_SCAN_INTERVAL);
+        };
+
+        function formatSignal(signal) {
+            signal = parseInt(signal);
+            if (signal >= 70) return `<span class="signal-strong">📶 ${signal}%</span>`;
+            if (signal >= 40) return `<span class="signal-medium">📶 ${signal}%</span>`;
+            return `<span class="signal-weak">📶 ${signal}%</span>`;
+        }
+
+        function scanWiFi() {
+            fetch("/api/wifi/scan")
+                .then(res => res.json())
+                .then(d => {
+                    wifiData = d.wifi_list;
+                    let tbody = document.getElementById("wifi-table-body");
+                    tbody.innerHTML = "";
+
+                    wifiData.forEach((ap, index) => {
+                        if (!ap.ssid.trim()) return;
+
+                        let row = document.createElement("tr");
+                        row.classList.add("wifi-row");
+
+                        row.innerHTML = `
+                            <td>${ap.ssid}</td>
+                            <td>${formatSignal(ap.signal)}</td>
+                            <td>${ap.band}</td>
+                            <td>${ap.channel}</td>
+                            <td>${ap.secure ? "🔒" : "🔓"}</td>
+                        `;
+
+                        row.onclick = () => selectRow(index, row);
+                        tbody.appendChild(row);
+                    });
+                });
+        }
+
+        function selectRow(index, rowElement) {
+            if (selectedRow)
+                selectedRow.classList.remove("wifi-selected");
+
+            rowElement.classList.add("wifi-selected");
+            selectedRow = rowElement;
+
+            const ap = wifiData[index];
+
+            document.getElementById("ssid-input").value = ap.ssid;
+            document.getElementById("password-field").style.display =
+                ap.secure ? "block" : "none";
+        }
+
+        function connectWiFi() {
+            const ssid = document.getElementById("ssid-input").value.trim();
+            const ap = wifiData.find(w => w.ssid === ssid);
+            const secure = ap ? ap.secure : true;
+            const password = document.getElementById("password-input").value.trim();
+            const status = document.getElementById("wifi-status");
+
+            if (!ssid) {
+                status.innerText = "❌ SSID cannot be empty!";
+                status.style.color = "red";
+                return;
+            }
+
+            if (secure && !password) {
+                status.innerText = "❌ Password required!";
+                status.style.color = "red";
+                return;
+            }
+
+            fetch("/api/wifi/connect", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ ssid, password, secure })
+            })
+                .then(res => res.json())
+                .then(d => {
+                    status.innerText = d.success ? "Connected!" : d.message;
+                    status.style.color = d.success ? "green" : "red";
+                });
+        }
+
+        function loadCurrentWifi() {
+            fetch("/api/wifi/status")
+                .then(res => res.json())
+                .then(info => {
+                    document.getElementById("current-wifi").innerHTML = `
+                        <b>SSID:</b> ${info.ssid || "N/A"}<br>
+                        <b>Signal:</b> ${info.signal || "-"}<br>
+                        <b>BSSID:</b> ${info.bssid || "-"}<br>
+                        <b>Channel:</b> ${info.channel || "-"}<br>
+                        <b>Device:</b> ${info.device || "-"}
+                    `;
+                });
+        }
+    </script>
+
+</body>
+
+</html>

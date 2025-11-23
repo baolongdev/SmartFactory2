@@ -102,20 +102,62 @@ def camera_detections():
 def list_cameras():
     """
     Trả về danh sách camera khả dụng.
-    Dò các index từ 0 → 10 (hoặc nhiều hơn nếu bạn muốn).
+    - Windows: dò index 0→10 bằng OpenCV
+    - Raspberry/Linux: đọc từ /dev/video* (ổn định hơn)
     """
-    import cv2
 
+    import cv2
+    import glob
+    import platform
+
+    os_name = platform.system().lower()
     available = []
 
-    for i in range(0, 10):
-        cap = cv2.VideoCapture(i)
-        if cap.isOpened():
-            available.append({
-                "index": i,
-                "name": f"Camera {i}"
-            })
-        cap.release()
+    # ======================================================
+    # 👉 RASPBERRY PI / UBUNTU / LINUX
+    # ======================================================
+    if "linux" in os_name:
+        # Tìm camera device /dev/video*
+        video_devices = sorted(glob.glob("/dev/video*"))
+
+        for dev in video_devices:
+            # Lấy index số từ tên /dev/videoX
+            cam_index = int(dev.replace("/dev/video", ""))
+
+            cap = cv2.VideoCapture(cam_index)
+            if cap.isOpened():
+                available.append({
+                    "index": cam_index,
+                    "name": f"Linux Camera {cam_index} ({dev})"
+                })
+            cap.release()
+
+    # ======================================================
+    # 👉 WINDOWS
+    # ======================================================
+    elif "windows" in os_name:
+        # Windows có thể có device index rác → chỉ scan 0 → 5
+        for i in range(0, 6):
+            cap = cv2.VideoCapture(i, cv2.CAP_DSHOW)   # CAP_DSHOW: bắt cam nhanh, tránh freeze
+            if cap.isOpened():
+                available.append({
+                    "index": i,
+                    "name": f"Windows Camera {i}"
+                })
+            cap.release()
+
+    # ======================================================
+    # 👉 OTHER OS (macOS...)
+    # ======================================================
+    else:
+        for i in range(0, 5):
+            cap = cv2.VideoCapture(i)
+            if cap.isOpened():
+                available.append({
+                    "index": i,
+                    "name": f"Camera {i}"
+                })
+            cap.release()
 
     return jsonify({
         "status": "success",
