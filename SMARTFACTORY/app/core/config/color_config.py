@@ -7,36 +7,10 @@ class ColorConfig:
         {
             "name": "red",
             "bgr": [0, 0, 255],
-            "lower": [0, 120, 70],
+            "lower": [0, 100, 80],
             "upper": [10, 255, 255],
             "action_id": 3,
             "duration_ms": 8000
-        },
-        {
-            "name": "green",
-            "bgr": [0, 255, 0],
-            "lower": [36, 50, 70],
-            "upper": [89, 255, 255],
-            "action_id": 2,
-            "duration_ms": 6000
-        },
-        {
-            "name": "blue",
-            "bgr": [255, 0, 0],
-            "lower": [94, 80, 2],
-            "upper": [126, 255, 255],
-            "action_id": 1,
-            "duration_ms": 4000
-        },
-
-        # ⭐ NEW COLORS ADDED ⭐
-        {
-            "name": "yellow",
-            "bgr": [0, 255, 255],
-            "lower": [20, 100, 100],
-            "upper": [35, 255, 255],
-            "action_id": 4,
-            "duration_ms": 5000
         },
         {
             "name": "orange",
@@ -47,23 +21,46 @@ class ColorConfig:
             "duration_ms": 5000
         },
         {
+            "name": "yellow",
+            "bgr": [0, 255, 255],
+            "lower": [22, 100, 100],
+            "upper": [33, 255, 255],
+            "action_id": 4,
+            "duration_ms": 5000
+        },
+        {
+            "name": "green",
+            "bgr": [0, 255, 0],
+            "lower": [35, 80, 80],
+            "upper": [85, 255, 255],
+            "action_id": 2,
+            "duration_ms": 6000
+        },
+        {
+            "name": "blue",
+            "bgr": [255, 0, 0],
+            "lower": [90, 70, 70],
+            "upper": [130, 255, 255],
+            "action_id": 1,
+            "duration_ms": 4000
+        },
+        {
             "name": "purple",
             "bgr": [255, 0, 255],
-            "lower": [129, 50, 70],
-            "upper": [158, 255, 255],
+            "lower": [135, 60, 60],
+            "upper": [155, 255, 255],
             "action_id": 6,
             "duration_ms": 6000
         },
         {
             "name": "pink",
             "bgr": [203, 192, 255],
-            "lower": [145, 80, 80],
-            "upper": [170, 255, 255],
+            "lower": [155, 70, 100],
+            "upper": [175, 255, 255],
             "action_id": 7,
             "duration_ms": 7000
         }
     ]
-
 
     def __init__(self, path="config/colors.json"):
         self.path = path

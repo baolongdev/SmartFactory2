@@ -292,8 +292,8 @@ button:hover { background:#000; color:#fff; }
 
 /* ================= WIFI TABLE ================= */
 .wifi-table {
-    width: 900px;         /* Kích thước cố định */
-    min-width: 900px;
+    width: 500px;         /* Kích thước cố định */
+    min-width: 300px;
     border-collapse: collapse;
     font-size: 14px;
 }
@@ -340,6 +340,14 @@ button:hover { background:#000; color:#fff; }
         gap:2px;
         flex-direction: column;
         margin: 8px;
+    }
+    
+    /* */
+    .header-btn, .video-btn, .video-btn.danger {
+        font-size: 10px;
+    }
+    .status-chip {
+        font-size: 8px;
     }
 
     /* Convert layout 2 cột -> 1 cột */
