@@ -6,12 +6,11 @@ Werkzeug>=3.0.0
 # MQTT Protocol
 paho-mqtt>=2.0.0
 
-# Computer Vision (Cross-platform)
+# Computer Vision (Use PiWheels for ARM)
 opencv-python-headless==4.8.1.78
-# Contrib modules không khả dụng trên ARM → bỏ hoặc cài riêng cho Windows nếu cần
 
-# Scientific Computing (Cross-platform safe versions)
-numpy>=1.24.0,<2.0.0
+# Scientific Computing (ARM builds from piwheels)
+numpy>=1.26.4,<2.0.0
 scipy==1.10.1
 
 # Image Processing

@@ -1,48 +1,66 @@
-name: convey
-pass: convey12
-wifi: convey
-pass: convey12
+Hệ thống: Raspberry Pi OS Trixie
+Python: 3.11 (tự build)
+User: convey
+Pass: convey12
 
-## 🐍 1. Tạo môi trường ảo (virtualenv)
+chmod +x run_setup.sh
+./run_setup.sh
 
-**Bước 1 – Cài venv (nếu chưa có)**
+---
 
-```bash
-sudo apt update
-sudo apt install python3-venv
+Dưới đây là nội dung file **README.md** / **Hướng dẫn.md** theo đúng yêu cầu — được trình bày đẹp, rõ ràng và **tương thích Python 3.11 trên Raspberry Pi OS**.
+
+---
+
+# 📘 SMARTFACTORY – Hướng dẫn cài đặt Python 3.11 + Virtualenv + Service
+
+---
+
+## 🧩 **1. Tạo môi trường Python 3.11**
+
+Sau khi bạn đã build Python 3.11 từ source và có:
+
+```
+/usr/local/bin/python3.11
 ```
 
-**Bước 2 – Tạo môi trường ảo trong thư mục project**
-(Ví dụ bạn đang ở: `~/Desktop/SMARTFACTORY`)
+### **Bước 1 – Tạo virtual environment trong thư mục project**
 
 ```bash
-python3 -m venv env
+cd ~/Desktop/SMARTFACTORY
+python3.11 -m venv env
 ```
 
-**Bước 3 – Kích hoạt môi trường ảo**
+### **Bước 2 – Kích hoạt môi trường ảo**
 
 ```bash
 source env/bin/activate
 ```
 
-Thấy đầu dòng có `(env)` là OK.
-
-**Bước 4 – Cài numpy, scipy, OpenBLAS… ở hệ thống**
+### **Bước 3 – Cài các gói cần thiết trong hệ thống**
 
 ```bash
 sudo apt update
-sudo apt install -y python3-numpy python3-scipy python3-dev libopenblas-dev liblapack-dev gfortran
+sudo apt install -y libopenblas-dev liblapack-dev gfortran python3-dev
 ```
 
-**Bước 5 – Cài thư viện vào venv**
+⚠ Lưu ý: KHÔNG cài numpy/scipy hệ thống (`python3-numpy`, `python3-scipy`) vì chúng thuộc Python 3.13 → xung đột với Python 3.11.
+
+### **Bước 4 – Cài thư viện vào venv Python 3.11**
 
 ```bash
-pip install -r requirements.txt
-# hoặc từng cái
-# pip install <tên-package>
+pip install --upgrade pip setuptools wheel
+pip install --extra-index-url https://www.piwheels.org/simple -r requirements.txt
+
 ```
 
-**Bước 6 – Thoát môi trường ảo khi không dùng nữa**
+Nếu cần OpenCV cho Raspberry Pi:
+
+```bash
+pip install --extra-index-url https://www.piwheels.org/simple opencv-python-headless==4.8.1.78
+```
+
+### **Bước 5 – Thoát môi trường ảo nếu cần**
 
 ```bash
 deactivate
@@ -50,42 +68,51 @@ deactivate
 
 ---
 
-## ⚙️ 2. Tạo service tự chạy khi khởi động (systemd)
+## ⚙️ **2. Tạo service tự chạy bằng systemd (Flask + Gunicorn)**
 
 Giả sử:
 
 - User: `convey`
 - Project: `/home/convey/Desktop/SMARTFACTORY`
-- Venv: `/home/convey/Desktop/SMARTFACTORY/env`
-- App Flask/Gunicorn: `app:app` (tập tin `app.py`, biến Flask tên `app`)
+- Virtualenv: `/home/convey/Desktop/SMARTFACTORY/env`
+- File Flask: `app.py`
+- Biến Flask: `app`
 
-### Bước 1 – Tạo file service
+### **Bước 1 – Tạo file service**
 
 ```bash
 sudo nano /etc/systemd/system/smartfactory.service
 ```
 
-Dán nội dung (nhớ sửa đường dẫn/user nếu khác):
+### **Nội dung service**
 
 ```ini
 [Unit]
-Description=SMARTFACTORY Flask Service
+Description=SMARTFACTORY Flask Service (Python 3.11)
 After=network.target
 
 [Service]
 User=convey
 WorkingDirectory=/home/convey/Desktop/SMARTFACTORY
+
+# Virtual environment Python 3.11
 Environment="PATH=/home/convey/Desktop/SMARTFACTORY/env/bin"
+
+# Gunicorn chạy Flask app
 ExecStart=/home/convey/Desktop/SMARTFACTORY/env/bin/gunicorn -b 0.0.0.0:5000 app:app
+
 Restart=always
 
 [Install]
 WantedBy=multi-user.target
 ```
 
-Lưu & thoát: `Ctrl + O`, Enter, rồi `Ctrl + X`.
+Lưu: **Ctrl + O**
+Thoát: **Ctrl + X**
 
-### Bước 2 – Load service + bật chạy cùng hệ thống
+---
+
+## 🚀 **3. Khởi động service**
 
 ```bash
 sudo systemctl daemon-reload
@@ -95,24 +122,24 @@ sudo systemctl start smartfactory.service
 
 ---
 
-## 📋 3. Cách xem log service
+## 📄 **4. Kiểm tra service**
 
-**Xem log mới nhất:**
-
-```bash
-sudo journalctl -u smartfactory.service
-```
-
-**Xem log realtime (theo dõi liên tục):**
-
-```bash
-sudo journalctl -u smartfactory.service -f
-```
-
-**Xem trạng thái service:**
+**Trạng thái:**
 
 ```bash
 sudo systemctl status smartfactory.service
 ```
 
-Nếu app của bạn không phải `app:app` (ví dụ `main:app` hay tên khác), gửi mình tên file + biến Flask, mình chỉnh lại dòng `ExecStart` cho chuẩn luôn 👍
+**Xem log realtime:**
+
+```bash
+sudo journalctl -u smartfactory.service -f
+```
+
+---
+
+# 📝 **5. Ghi chú**
+
+- Không thay thế `python3` mặc định của hệ thống (Python 3.13) → có thể làm lỗi Raspberry Pi OS.
+- Python 3.11 chỉ dùng qua virtualenv hoặc gọi trực tiếp `python3.11`.
+- Service luôn chạy Python 3.11 vì đã gán PATH trong file `.service`.
