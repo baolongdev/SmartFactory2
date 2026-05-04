@@ -1,95 +1,554 @@
 <!DOCTYPE html>
-<html lang="vi">
-
+<html lang="vi" class="h-full">
 <head>
-    <meta charset="UTF-8" />
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>WiFi Settings</title>
+    <title>SmartFactory — WiFi Settings</title>
 
-    <!-- Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Anti-flash: apply saved theme before first paint -->
+    <script>
+        (function () {
+            try {
+                var t = localStorage.getItem('sf-theme');
+                if (t !== 'light') document.documentElement.classList.add('dark');
+            } catch (e) {
+                document.documentElement.classList.add('dark');
+            }
+        })();
+    </script>
 
-    <!-- Main CSS -->
-    <link rel="stylesheet" href="/static/css/style.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>tailwind.config = { darkMode: 'class' }</script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        /* ═══════════════════════════════════════════════════════
+           DESIGN TOKENS
+        ═══════════════════════════════════════════════════════ */
+        :root {
+            --bg:                #ffffff;
+            --bg-subtle:         #f8fafc;
+            --bg-muted:          #f1f5f9;
+            --border:            #e2e8f0;
+            --fg:                #0f172a;
+            --fg-muted:          #64748b;
+            --fg-subtle:         #94a3b8;
+            --primary:           #2563eb;
+            --primary-hover:     #1d4ed8;
+            --primary-fg:        #ffffff;
+            --primary-muted:     rgba(37,99,235,0.08);
+            --destructive:       #dc2626;
+            --destructive-muted: rgba(220,38,38,0.08);
+            --success:           #16a34a;
+            --success-muted:     rgba(22,163,74,0.08);
+            --warning:           #d97706;
+            --radius:            6px;
+        }
+        .dark {
+            --bg:                #09090b;
+            --bg-subtle:         #18181b;
+            --bg-muted:          #27272a;
+            --border:            #3f3f46;
+            --fg:                #fafafa;
+            --fg-muted:          #a1a1aa;
+            --fg-subtle:         #71717a;
+            --primary:           #3b82f6;
+            --primary-hover:     #2563eb;
+            --primary-fg:        #ffffff;
+            --primary-muted:     rgba(59,130,246,0.1);
+            --destructive:       #ef4444;
+            --destructive-muted: rgba(239,68,68,0.1);
+            --success:           #22c55e;
+            --success-muted:     rgba(34,197,94,0.1);
+            --warning:           #f59e0b;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           BASE
+        ═══════════════════════════════════════════════════════ */
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            font-family: 'Inter', system-ui, sans-serif;
+            background: var(--bg); color: var(--fg);
+            min-height: 100vh;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           SCROLLBAR
+        ═══════════════════════════════════════════════════════ */
+        ::-webkit-scrollbar             { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track       { background: var(--bg-subtle); }
+        ::-webkit-scrollbar-thumb       { background: var(--border); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: var(--primary); }
+
+        /* ═══════════════════════════════════════════════════════
+           CARD
+        ═══════════════════════════════════════════════════════ */
+        .sf-card {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+        }
+        .sf-card-header {
+            display: flex; align-items: center; gap: 8px;
+            padding: 9px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.68rem; font-weight: 700;
+            color: var(--fg-muted); letter-spacing: 0.07em; text-transform: uppercase;
+        }
+        .sf-card-header i { color: var(--primary); }
+
+        /* ═══════════════════════════════════════════════════════
+           FORM ELEMENTS
+        ═══════════════════════════════════════════════════════ */
+        .sf-input, .sf-select {
+            width: 100%;
+            background: var(--bg); color: var(--fg);
+            border: 1px solid var(--border); border-radius: var(--radius);
+            height: 36px; padding: 0 12px;
+            font-size: 0.82rem; font-family: inherit;
+            outline: none;
+            transition: border-color 0.15s, background 0.15s;
+            -webkit-appearance: none; -moz-appearance: none; appearance: none;
+        }
+        .sf-select { padding-right: 30px; cursor: pointer; }
+        .sf-select:hover:not(:disabled) { background: var(--bg-muted); }
+        .sf-input:focus, .sf-select:focus { border-color: var(--primary); }
+        .sf-input:disabled, .sf-select:disabled { opacity: 0.5; cursor: not-allowed; }
+        .sf-input::placeholder { color: var(--fg-subtle); }
+        .sf-select option { background: var(--bg); color: var(--fg); }
+        .sf-label {
+            font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em;
+            text-transform: uppercase; color: var(--fg-muted);
+            margin-bottom: 5px; display: block;
+        }
+        /* Input with trailing icon button */
+        .sf-input-suffix { position: relative; }
+        .sf-input-suffix .sf-input { padding-right: 38px; }
+        .sf-input-suffix-btn {
+            position: absolute; right: 0; top: 0;
+            height: 36px; width: 36px;
+            display: flex; align-items: center; justify-content: center;
+            background: transparent; border: none; cursor: pointer;
+            color: var(--fg-subtle); transition: color 0.15s; font-size: 0.82rem;
+        }
+        .sf-input-suffix-btn:hover { color: var(--fg); }
+
+        /* ═══════════════════════════════════════════════════════
+           BUTTONS
+        ═══════════════════════════════════════════════════════ */
+        .sf-btn {
+            display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+            padding: 8px 16px; border-radius: var(--radius);
+            font-size: 0.8rem; font-weight: 600; letter-spacing: 0.01em;
+            transition: background 0.15s, color 0.15s, border-color 0.15s;
+            cursor: pointer; border: 1px solid transparent;
+        }
+        .sf-btn-primary {
+            background: var(--primary); color: var(--primary-fg); border-color: var(--primary);
+        }
+        .sf-btn-primary:hover    { background: var(--primary-hover); border-color: var(--primary-hover); }
+        .sf-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+        .sf-btn-ghost {
+            background: transparent; color: var(--fg-muted); border-color: var(--border);
+        }
+        .sf-btn-ghost:hover { background: var(--bg-muted); color: var(--fg); }
+        .sf-btn-sm { padding: 6px 12px; font-size: 0.75rem; }
+
+        /* ═══════════════════════════════════════════════════════
+           WIFI TABLE
+        ═══════════════════════════════════════════════════════ */
+        #wifi-table-body tr { transition: background 0.12s; }
+        .wifi-row { cursor: pointer; }
+        .wifi-row:hover { background: var(--bg-muted); }
+        .wifi-selected { background: var(--primary-muted) !important; }
+        .wifi-selected td:first-child { border-left: 2px solid var(--primary); }
+
+        #wifi-table-body td {
+            padding: 9px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.8rem; color: var(--fg);
+        }
+        #wifi-table-body tr:last-child td { border-bottom: none; }
+
+        /* ═══════════════════════════════════════════════════════
+           SIGNAL STRENGTH
+        ═══════════════════════════════════════════════════════ */
+        .signal-strong { color: var(--success);     font-weight: 700; }
+        .signal-medium { color: var(--warning);     font-weight: 700; }
+        .signal-weak   { color: var(--destructive); font-weight: 700; }
+
+        /* ═══════════════════════════════════════════════════════
+           STATUS BADGE
+        ═══════════════════════════════════════════════════════ */
+        .status-indicator {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 3px 10px; border-radius: 9999px;
+            font-size: 0.72rem; font-weight: 600;
+            border: 1px solid transparent;
+        }
+        .status-online  { background: var(--success-muted);     color: var(--success);     border-color: var(--success); }
+        .status-offline { background: var(--destructive-muted); color: var(--destructive); border-color: var(--destructive); }
+
+        /* ═══════════════════════════════════════════════════════
+           WORKFLOW STEPS
+        ═══════════════════════════════════════════════════════ */
+        .workflow-step {
+            display: flex; align-items: center; gap: 10px;
+            padding: 9px 13px; border-radius: var(--radius);
+            border: 1px solid var(--border); background: var(--bg-muted);
+            transition: border-color 0.2s, background 0.2s;
+        }
+        .workflow-step.active    { border-color: var(--primary); background: var(--primary-muted); }
+        .workflow-step.completed { border-color: var(--success); background: var(--success-muted); }
+
+        .step-number {
+            width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 700; font-size: 0.75rem;
+            background: var(--border); color: var(--fg-muted);
+            transition: background 0.2s, color 0.2s;
+        }
+        .workflow-step.active    .step-number { background: var(--primary); color: var(--primary-fg); }
+        .workflow-step.completed .step-number { background: var(--success); color: #fff; }
+
+        .step-content { min-width: 0; }
+        .step-title { font-size: 0.78rem; font-weight: 600; color: var(--fg-muted); }
+        .step-desc  { font-size: 0.67rem; color: var(--fg-subtle); margin-top: 2px; }
+        .workflow-step.active    .step-title { color: var(--primary); }
+        .workflow-step.completed .step-title { color: var(--success); }
+
+        /* ═══════════════════════════════════════════════════════
+           MISC
+        ═══════════════════════════════════════════════════════ */
+        .sec-open   { color: var(--fg-subtle); }
+        .sec-locked { color: var(--warning); }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { animation: spin 0.8s linear infinite; display: inline-block; }
+
+        .nav-link {
+            display: inline-flex; align-items: center; gap: 6px;
+            font-size: 0.73rem; font-weight: 600; color: var(--fg-muted);
+            padding: 5px 9px; border-radius: var(--radius);
+            text-decoration: none;
+            transition: background 0.15s, color 0.15s;
+            background: transparent; border: 1px solid var(--border); cursor: pointer;
+        }
+        .nav-link:hover { color: var(--primary); background: var(--primary-muted); border-color: var(--primary); }
+
+        /* Theme toggle */
+        .theme-toggle {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 30px; height: 30px; border-radius: var(--radius);
+            color: var(--fg-muted); background: transparent;
+            border: 1px solid var(--border); cursor: pointer;
+            transition: background 0.15s, color 0.15s;
+            font-size: 0.8rem;
+        }
+        .theme-toggle:hover { background: var(--bg-muted); color: var(--fg); }
+
+        /* Info row helper */
+        .sf-info-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 0.82rem;
+        }
+        .sf-info-row:last-child { border-bottom: none; }
+        .sf-info-label { color: var(--fg-muted); font-size: 0.68rem; text-transform: uppercase; font-weight: 600; letter-spacing: 0.04em; }
+        .sf-info-value { color: var(--fg); }
+
+        /* Empty state */
+        .sf-empty { color: var(--fg-subtle); font-style: italic; font-size: 0.8rem; }
+
+        /* Count badge */
+        .count-badge { background: var(--bg-muted); color: var(--fg-subtle); }
+        .count-badge.has-items { background: var(--success-muted); color: var(--success); }
+
+        /* Separator */
+        .sf-sep { display: inline-block; width: 1px; height: 18px; background: var(--border); flex-shrink: 0; }
+
+        /* ═══════════════════════════════════════════════════════
+           RESPONSIVE
+        ═══════════════════════════════════════════════════════ */
+
+        /* ── Mobile  < 640px ─────────────────────────────────── */
+        @media (max-width: 639px) {
+            /* Header compact */
+            header { padding-left: 10px; padding-right: 10px; gap: 6px; }
+            .sf-scan-label { display: none; }
+            .sf-nav-label  { display: none; }
+            .sf-wifi-sep   { display: none; }
+
+            /* Main grid → 1 col, tighter padding */
+            .flex-1.grid { padding: 10px; gap: 10px; }
+
+            /* WiFi table: hide Band + Ch columns */
+            .wifi-col-band, .wifi-col-ch { display: none; }
+
+            /* Table padding tighter */
+            #wifi-table-body td { padding: 8px 10px; font-size: 0.75rem; }
+            #wifi-thead th      { padding: 6px 10px; }
+
+            /* Connect form */
+            .sf-card .p-4 { padding: 12px; }
+
+            /* Info card: smaller text */
+            .sf-card > .p-4:last-child { padding: 12px; }
+
+            /* Workflow steps */
+            .step-desc { display: none; }
+            .workflow-step { padding: 7px 10px; }
+
+            /* Right column: stack below left on mobile — reorder so status comes last */
+        }
+
+        /* ── Very small  < 400px ─────────────────────────────── */
+        @media (max-width: 399px) {
+            .sf-brand-sub { display: none; }
+            header { height: auto; min-height: 48px; padding-top: 8px; padding-bottom: 8px; }
+        }
+
+        /* ── Small tablet  640–767px ────────────────────────── */
+        @media (min-width: 640px) and (max-width: 767px) {
+            /* Still 1-col grid below md — add tighter padding */
+            .flex-1.grid { padding: 12px; gap: 12px; }
+            .wifi-col-band { display: none; }
+        }
+
+        /* ── Tablet  768–1023px: 3-col grid already active ───── */
+        @media (min-width: 768px) and (max-width: 1023px) {
+            /* Right column gets smaller — tighten card padding */
+            .sf-card-header { padding: 8px 12px; }
+        }
+
+        /* ── Large desktop  ≥ 1280px ────────────────────────── */
+        @media (min-width: 1280px) {
+            .flex-1.grid { padding: 20px; gap: 20px; }
+        }
+    </style>
 </head>
 
-<body>
-    <!-- HEADER -->
-    <header class="app-header">
-        <h2><i class="fas fa-wifi"></i> WiFi Settings</h2>
+<body class="min-h-screen flex flex-col">
+
+    <!-- ════════════════════════════════════════ HEADER ══ -->
+    <header class="flex-none flex items-center justify-between px-4 gap-2"
+            style="min-height:52px; background:var(--bg-subtle); border-bottom:1px solid var(--border);">
+
+        <div class="flex items-center gap-2.5">
+            <div class="w-7 h-7 rounded flex items-center justify-center flex-shrink-0"
+                 style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);">
+                <i class="fas fa-wifi text-white" style="font-size:0.72rem;"></i>
+            </div>
+            <div>
+                <div class="font-bold leading-none" style="font-size:0.8rem; color:var(--fg);">WiFi Settings</div>
+                <div class="sf-brand-sub font-semibold" style="font-size:0.6rem; color:var(--primary); letter-spacing:0.08em;">NETWORK MANAGER</div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <span class="sf-empty text-xs" id="auto-scan-indicator" style="font-style:normal;">
+                <i class="fas fa-rotate spinner mr-1" style="color:var(--fg-subtle);"></i>
+                <span class="sf-scan-label" style="color:var(--fg-subtle);">Auto-scan 10s</span>
+            </span>
+            <span class="sf-sep sf-wifi-sep"></span>
+            <button onclick="toggleTheme()" class="theme-toggle" title="Toggle theme" id="theme-btn">
+                <i class="fas fa-moon"></i>
+            </button>
+            <a href="/" class="nav-link">
+                <i class="fas fa-arrow-left"></i><span class="sf-nav-label"> Dashboard</span>
+            </a>
+        </div>
     </header>
 
-    <!-- MAIN WRAPPER -->
-    <div class="container">
+    <!-- ══════════════════════════════════════════ MAIN ══ -->
+    <div class="flex-1 grid grid-cols-1 md:grid-cols-3 gap-4 p-4">
 
-        <!-- RIGHT PANEL: CURRENT STATUS -->
-        <div class="section wifi-status-section">
-            <h3><i class="fas fa-signal"></i> Current WiFi Status</h3>
+        <!-- ── LEFT: Networks + Connect ──────────────── -->
+        <div class="md:col-span-2 flex flex-col gap-4">
 
-            <div id="current-wifi" class="status-box">
-                Loading...
+            <!-- Network list -->
+            <div class="sf-card flex-1">
+                <div class="sf-card-header">
+                    <i class="fas fa-tower-broadcast"></i>
+                    Nearby WiFi Networks
+                    <span id="network-count"
+                          class="ml-2 px-2 py-0.5 rounded-full text-xs font-bold count-badge">0</span>
+                    <button onclick="scanWiFi()"
+                            class="ml-auto sf-btn sf-btn-primary sf-btn-sm">
+                        <i class="fas fa-magnifying-glass"></i> Scan Now
+                    </button>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead id="wifi-thead" style="border-bottom:1px solid var(--border);">
+                            <tr>
+                                <th class="text-left px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
+                                    style="color:var(--fg-muted);">SSID</th>
+                                <th class="text-left px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
+                                    style="color:var(--fg-muted);">Signal</th>
+                                <th class="wifi-col-band text-left px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
+                                    style="color:var(--fg-muted);">Band</th>
+                                <th class="wifi-col-ch text-left px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
+                                    style="color:var(--fg-muted);">Ch</th>
+                                <th class="text-left px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
+                                    style="color:var(--fg-muted);">Security</th>
+                            </tr>
+                        </thead>
+                        <tbody id="wifi-table-body">
+                            <tr>
+                                <td colspan="5" class="px-4 py-8 text-center sf-empty">
+                                    <i class="fas fa-rotate spinner mr-2"></i>Scanning...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
-            <button onclick="loadCurrentWifi()" class="btn-primary">
-                <i class="fas fa-sync"></i> Refresh
-            </button>
+            <!-- Connect form -->
+            <div class="sf-card">
+                <div class="sf-card-header">
+                    <i class="fas fa-plug-circle-bolt"></i>
+                    Connect to Network
+                </div>
+                <div class="p-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                        <div>
+                            <label class="sf-label">SSID</label>
+                            <input id="ssid-input" type="text"
+                                   placeholder="Click a network above..."
+                                   class="sf-input">
+                        </div>
+                        <div id="password-field">
+                            <label class="sf-label">Password</label>
+                            <div class="sf-input-suffix">
+                                <input id="password-input" type="password"
+                                       placeholder="Enter password..."
+                                       class="sf-input">
+                                <button type="button"
+                                        onclick="togglePasswordVisibility()"
+                                        class="sf-input-suffix-btn">
+                                    <i id="pwd-eye" class="fas fa-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <button id="btn-connect" onclick="connectWiFi()"
+                                class="sf-btn sf-btn-primary flex-1">
+                            <i class="fas fa-link"></i> Connect
+                        </button>
+                        <div id="wifi-status" class="text-sm font-semibold"></div>
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- LEFT PANEL -->
-        <div class="control-panel">
-            <h3><i class="fas fa-search"></i> Nearby WiFi Networks</h3>
+        <!-- ── RIGHT: Status + Workflow ──────────────── -->
+        <div class="flex flex-col gap-4">
 
-            <button onclick="scanWiFi()" class="btn-primary">
-                <i class="fas fa-wifi"></i> Scan Now
-            </button>
-
-            <small style="font-size:12px; opacity:0.7;">Auto scan every 10s</small>
-
-            <!-- TABLE LIST -->
-            <div class="table-wrapper">
-                <table class="wifi-table" id="wifi-table">
-                    <thead>
-                        <tr>
-                            <th>SSID</th>
-                            <th>Signal</th>
-                            <th>Band</th>
-                            <th>Channel</th>
-                            <th>Security</th>
-                        </tr>
-                    </thead>
-                    <tbody id="wifi-table-body">
-                        <tr>
-                            <td colspan="5" style="text-align:center; opacity:0.7;">Loading...</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- Current connection -->
+            <div class="sf-card">
+                <div class="sf-card-header">
+                    <i class="fas fa-signal"></i>
+                    Current Connection
+                    <button onclick="loadCurrentWifi()"
+                            class="ml-auto nav-link"
+                            style="border:none; padding:2px 5px; font-size:0.7rem;">
+                        <i class="fas fa-arrows-rotate"></i>
+                    </button>
+                </div>
+                <div class="p-4">
+                    <div id="current-wifi">
+                        <div class="flex items-center justify-center py-6 sf-empty" style="font-style:normal;">
+                            <i class="fas fa-rotate spinner mr-2" style="color:var(--fg-subtle);"></i>
+                            <span>Loading...</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <hr />
-
-            <h3><i class="fas fa-link"></i> Connect to WiFi</h3>
-
-            <div class="field">
-                <span>SSID:</span>
-                <input id="ssid-input" type="text" placeholder="Click a WiFi in the table" />
+            <!-- Connection workflow -->
+            <div class="sf-card">
+                <div class="sf-card-header">
+                    <i class="fas fa-list-check"></i>
+                    Connection Steps
+                </div>
+                <div class="p-3 flex flex-col gap-2">
+                    <div id="wf-step-1" class="workflow-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <div class="step-title">Scan Networks</div>
+                            <div class="step-desc">Detect available APs</div>
+                        </div>
+                    </div>
+                    <div id="wf-step-2" class="workflow-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <div class="step-title">Select Network</div>
+                            <div class="step-desc">Choose from list</div>
+                        </div>
+                    </div>
+                    <div id="wf-step-3" class="workflow-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <div class="step-title">Enter Credentials</div>
+                            <div class="step-desc">Provide password</div>
+                        </div>
+                    </div>
+                    <div id="wf-step-4" class="workflow-step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <div class="step-title">Connected</div>
+                            <div class="step-desc">WiFi established</div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div class="field" id="password-field">
-                <span>Password:</span>
-                <input id="password-input" type="password" placeholder="Password" />
+            <!-- Info tips -->
+            <div class="sf-card">
+                <div class="sf-card-header">
+                    <i class="fas fa-circle-info"></i>
+                    Info
+                </div>
+                <div class="p-4 flex flex-col gap-3" style="font-size:0.75rem; color:var(--fg-muted);">
+                    <div class="flex items-start gap-2">
+                        <i class="fas fa-shield-halved mt-0.5" style="color:var(--primary);"></i>
+                        <span>WiFi connect requires elevated system privileges.</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i class="fas fa-clock mt-0.5" style="color:var(--primary);"></i>
+                        <span>Auto-scan refreshes every 10 seconds with cache merge.</span>
+                    </div>
+                    <div class="flex items-start gap-2">
+                        <i class="fas fa-lock mt-0.5" style="color:var(--warning);"></i>
+                        <span>WPA2-PSK/AES profile is used for secure networks on Windows.</span>
+                    </div>
+                </div>
             </div>
-
-            <button id="btn-connect" onclick="connectWiFi()" class="btn-primary">
-                <i class="fas fa-link"></i> Connect
-            </button>
-
-            <div id="wifi-status" style="margin-top:10px; font-weight:bold;"></div>
         </div>
-
     </div>
 
-    <!-- SCRIPT -->
     <script>
+        /* ── Theme toggle ──────────────────────────────────── */
+        function toggleTheme() {
+            const isDark = document.documentElement.classList.toggle('dark');
+            localStorage.setItem('sf-theme', isDark ? 'dark' : 'light');
+            _updateThemeIcon(isDark);
+        }
+        function _updateThemeIcon(isDark) {
+            const btn = document.getElementById('theme-btn');
+            if (!btn) return;
+            btn.innerHTML = isDark ? '<i class="fas fa-sun"></i>' : '<i class="fas fa-moon"></i>';
+            btn.title = isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+        }
+        _updateThemeIcon(document.documentElement.classList.contains('dark'));
+
+        /* ─────────────────────────────────────────────────── */
         let wifiData = [];
         let selectedRow = null;
         const AUTO_SCAN_INTERVAL = 10000;
@@ -101,147 +560,233 @@
             setInterval(loadCurrentWifi, AUTO_SCAN_INTERVAL);
         };
 
-        // ======================================================
-        // Format signal
-        // ======================================================
+        /* ─ Signal formatter ──────────────────────────────── */
         function formatSignal(signal) {
-            if (!signal && signal !== 0)
-                return `<span class="signal-weak">-</span>`;
-
+            if (signal === null || signal === undefined)
+                return `<span class="signal-weak">—</span>`;
             signal = parseInt(signal);
-
-            if (signal >= 70) return `<span class="signal-strong">📶 ${signal}%</span>`;
-            if (signal >= 40) return `<span class="signal-medium">📶 ${signal}%</span>`;
-
-            return `<span class="signal-weak">📶 ${signal}%</span>`;
+            const bars = signal >= 70 ? '▄▄▄▄' : signal >= 40 ? '▄▄▄░' : '▄▄░░';
+            if (signal >= 70) return `<span class="signal-strong">${bars} ${signal}%</span>`;
+            if (signal >= 40) return `<span class="signal-medium">${bars} ${signal}%</span>`;
+            return `<span class="signal-weak">${bars} ${signal}%</span>`;
         }
 
-        // ======================================================
-        // Load WiFi list
-        // ======================================================
+        /* ─ Security badge ────────────────────────────────── */
+        function formatSecurity(sec) {
+            sec = (sec || '').toString().trim().toLowerCase();
+            const isOpen = sec === '' || sec === 'unknown' || sec.includes('open');
+            if (isOpen) return `<span class="sec-open"><i class="fas fa-lock-open mr-1"></i>Open</span>`;
+            return `<span class="sec-locked"><i class="fas fa-lock mr-1"></i>${sec.toUpperCase().substring(0, 12)}</span>`;
+        }
+
+        /* ─ Scan WiFi ─────────────────────────────────────── */
         function scanWiFi() {
-            fetch("/api/wifi/scan")
-                .then(res => res.json())
+            updateWorkflowStep(1);
+            const tbody = document.getElementById('wifi-table-body');
+            tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center sf-empty">
+                <i class="fas fa-rotate spinner mr-2"></i>Scanning networks...
+            </td></tr>`;
+
+            fetch('/api/wifi/scan')
+                .then(r => r.json())
                 .then(d => {
-                    wifiData = d.wifi_list || [];
+                    wifiData = (d.wifi_list || []).filter(ap => ap.ssid && ap.ssid.trim());
 
-                    let tbody = document.getElementById("wifi-table-body");
-                    tbody.innerHTML = "";
+                    const countBadge = document.getElementById('network-count');
+                    if (countBadge) {
+                        countBadge.textContent = wifiData.length;
+                        countBadge.classList.toggle('has-items', wifiData.length > 0);
+                    }
 
-                    wifiData.forEach((ap, index) => {
-                        if (!ap.ssid || !ap.ssid.trim()) return;
+                    if (!wifiData.length) {
+                        tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center sf-empty">
+                            No networks found
+                        </td></tr>`;
+                        updateWorkflowStep(1, false);
+                        return;
+                    }
 
-                        // normalize security string
-                        let sec = (ap.security || "").toString().trim().toLowerCase();
-                        let isOpen = (sec === "" || sec === "unknown" || sec.includes("open"));
-
-                        let securityLabel = isOpen ? "🔓 Open" : "🔒 " + (ap.security || "Secured");
-
-                        let row = document.createElement("tr");
-                        row.classList.add("wifi-row");
-
-                        row.innerHTML = `
-                            <td>${ap.ssid}</td>
-                            <td>${formatSignal(ap.signal)}</td>
-                            <td>${ap.band}</td>
-                            <td>${ap.channel ?? "-"}</td>
-                            <td>${securityLabel}</td>
+                    tbody.innerHTML = '';
+                    wifiData.forEach((ap, i) => {
+                        const tr = document.createElement('tr');
+                        tr.className = 'wifi-row';
+                        tr.innerHTML = `
+                            <td class="px-4 font-medium">${escapeHTML(ap.ssid)}</td>
+                            <td class="px-4">${formatSignal(ap.signal)}</td>
+                            <td class="wifi-col-band px-4" style="color:var(--fg-muted);">${ap.band || '—'}</td>
+                            <td class="wifi-col-ch px-4" style="color:var(--fg-muted);">${ap.channel ?? '—'}</td>
+                            <td class="px-4">${formatSecurity(ap.security)}</td>
                         `;
-
-                        row.onclick = () => selectRow(index, row);
-                        tbody.appendChild(row);
+                        tr.onclick = () => selectRow(i, tr);
+                        tbody.appendChild(tr);
                     });
+
+                    updateWorkflowStep(1, true);
+                })
+                .catch(() => {
+                    tbody.innerHTML = `<tr><td colspan="5" class="px-4 py-8 text-center" style="color:var(--destructive); font-size:0.85rem;">
+                        <i class="fas fa-triangle-exclamation mr-2"></i>Scan failed
+                    </td></tr>`;
+                    updateWorkflowStep(1, false);
                 });
         }
 
-        // ======================================================
-        // User clicks a WiFi row
-        // ======================================================
-        function selectRow(index, rowElement) {
-            if (selectedRow)
-                selectedRow.classList.remove("wifi-selected");
-
-            rowElement.classList.add("wifi-selected");
-            selectedRow = rowElement;
+        /* ─ Select row ────────────────────────────────────── */
+        function selectRow(index, rowEl) {
+            if (selectedRow) selectedRow.classList.remove('wifi-selected');
+            rowEl.classList.add('wifi-selected');
+            selectedRow = rowEl;
 
             const ap = wifiData[index];
-            const sec = (ap.security || "").toLowerCase();
+            document.getElementById('ssid-input').value = ap.ssid;
 
-            document.getElementById("ssid-input").value = ap.ssid;
+            const sec = (ap.security || '').toLowerCase();
+            const needsPwd = !(sec.includes('open') || sec === '' || sec === 'unknown');
+            document.getElementById('password-field').style.display = needsPwd ? '' : 'none';
 
-            // Show/hide password field
-            let needPassword = !(sec.includes("open") || sec === "" || sec === "unknown");
-            document.getElementById("password-field").style.display =
-                needPassword ? "block" : "none";
+            updateWorkflowStep(2, true);
         }
 
-        // ======================================================
-        // Connect WiFi
-        // ======================================================
+        /* ─ Connect WiFi ──────────────────────────────────── */
         function connectWiFi() {
-            const ssid = document.getElementById("ssid-input").value.trim();
+            const ssid = document.getElementById('ssid-input').value.trim();
             const ap = wifiData.find(w => w.ssid === ssid);
 
-            if (!ssid) {
-                showStatus("❌ SSID cannot be empty!", false);
-                return;
-            }
+            if (!ssid) { showStatus('SSID cannot be empty', false); return; }
+            if (!ap)   { showStatus('Network not found in scan list', false); return; }
 
-            if (!ap) {
-                showStatus("❌ WiFi not found in scan list!", false);
-                return;
-            }
+            const isOpen   = (ap.security || '').toLowerCase().includes('open');
+            const password = document.getElementById('password-input').value.trim();
+            if (!isOpen && !password) { showStatus('Password required', false); return; }
 
-            let isOpen = (ap.security || "").toLowerCase().includes("open");
-            let password = document.getElementById("password-input").value.trim();
+            const btn = document.getElementById('btn-connect');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-rotate spinner"></i> Connecting...';
+            showStatus('', null);
+            updateWorkflowStep(3, true);
 
-            if (!isOpen && !password) {
-                showStatus("❌ Password required!", false);
-                return;
-            }
-
-            fetch("/api/wifi/connect", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    ssid,
-                    password,
-                    secure: !isOpen
-                })
+            fetch('/api/wifi/connect', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ssid, password, secure: !isOpen })
             })
-                .then(res => res.json())
-                .then(d => {
-                    showStatus(d.success ? "Connected!" : d.message, d.success);
-                });
+            .then(r => r.json())
+            .then(d => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-link"></i> Connect';
+                if (d.success) {
+                    showStatus('Connected successfully', true);
+                    updateWorkflowStep(4, true);
+                    loadCurrentWifi();
+                } else {
+                    showStatus(d.message || 'Connection failed', false);
+                    updateWorkflowStep(4, false);
+                }
+            })
+            .catch(() => {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-link"></i> Connect';
+                showStatus('Connection failed', false);
+                updateWorkflowStep(4, false);
+            });
         }
 
         function showStatus(msg, ok) {
-            const status = document.getElementById("wifi-status");
-            status.innerText = msg;
-            status.style.color = ok ? "green" : "red";
+            const el = document.getElementById('wifi-status');
+            if (!msg) { el.textContent = ''; return; }
+            el.style.color = ok ? 'var(--success)' : 'var(--destructive)';
+            el.innerHTML = ok
+                ? `<i class="fas fa-circle-check mr-1"></i>${msg}`
+                : `<i class="fas fa-circle-xmark mr-1"></i>${msg}`;
         }
 
-        // ======================================================
-        // Load current connected WiFi info
-        // ======================================================
+        /* ─ Current WiFi status ───────────────────────────── */
         function loadCurrentWifi() {
-            fetch("/api/wifi/status")
-                .then(res => res.json())
-                .then(info => {
-                    document.getElementById("current-wifi").innerHTML = `
-                        <b>SSID:</b> ${info.ssid || "N/A"}<br>
-                        <b>Signal:</b> ${info.signal || "-"}<br>
-                        <b>BSSID:</b> ${info.bssid || "-"}<br>
-                        <b>Channel:</b> ${info.channel || "-"}<br>
-                        <b>Freq:</b> ${info.freq ? info.freq + " MHz" : "-"}<br>
-                        <b>Band:</b> ${info.band || "-"}<br>
-                        <b>Security:</b> ${info.security || "-"}<br>
-                        <b>Device:</b> ${info.device || "-"}
+            fetch('/api/wifi/status')
+                .then(r => r.json())
+                .then(d => {
+                    const info = d.data || d;
+                    const el = document.getElementById('current-wifi');
+
+                    if (!info || !info.ssid) {
+                        el.innerHTML = `
+                            <div class="flex flex-col items-center py-4 gap-2 sf-empty" style="font-style:normal;">
+                                <i class="fas fa-wifi-slash text-2xl" style="color:var(--fg-subtle);"></i>
+                                <span>Not connected</span>
+                            </div>`;
+                        return;
+                    }
+
+                    const sig = parseInt(info.signal) || 0;
+                    const sigColor = sig >= 70 ? 'var(--success)' : sig >= 40 ? 'var(--warning)' : 'var(--destructive)';
+
+                    el.innerHTML = `
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fas fa-wifi text-lg" style="color:${sigColor};"></i>
+                            <span class="font-bold" style="font-size:0.95rem; color:var(--fg);">${escapeHTML(info.ssid || 'N/A')}</span>
+                        </div>
+                        ${infoRow('Signal',   `<span style="color:${sigColor}; font-weight:700;">${info.signal || '—'}%</span>`)}
+                        ${infoRow('BSSID',    `<span style="font-family:monospace; font-size:0.75rem;">${info.bssid || '—'}</span>`)}
+                        ${infoRow('Channel',  info.channel || '—')}
+                        ${infoRow('Freq',     info.freq ? info.freq + ' MHz' : '—')}
+                        ${infoRow('Band',     info.band || '—')}
+                        ${infoRow('Security', info.security || '—')}
+                        ${infoRow('Device',   info.device || '—')}
                     `;
+                })
+                .catch(() => {
+                    document.getElementById('current-wifi').innerHTML =
+                        `<div style="color:var(--destructive); font-size:0.85rem; padding:8px 0;">
+                            <i class="fas fa-triangle-exclamation mr-2"></i>Failed to load status
+                        </div>`;
                 });
         }
+
+        function infoRow(label, value) {
+            return `
+                <div class="sf-info-row">
+                    <span class="sf-info-label">${label}</span>
+                    <span class="sf-info-value">${value}</span>
+                </div>`;
+        }
+
+        /* ─ Password toggle ───────────────────────────────── */
+        function togglePasswordVisibility() {
+            const inp = document.getElementById('password-input');
+            const eye = document.getElementById('pwd-eye');
+            if (inp.type === 'password') {
+                inp.type = 'text';
+                eye.className = 'fas fa-eye-slash text-sm';
+            } else {
+                inp.type = 'password';
+                eye.className = 'fas fa-eye text-sm';
+            }
+        }
+
+        /* ─ Workflow steps ────────────────────────────────── */
+        function updateWorkflowStep(stepNumber, completed = false) {
+            for (let i = 1; i <= 4; i++) {
+                const s = document.getElementById(`wf-step-${i}`);
+                if (s) s.classList.remove('active', 'completed');
+            }
+            if (completed) {
+                for (let i = 1; i < stepNumber; i++) {
+                    const s = document.getElementById(`wf-step-${i}`);
+                    if (s) s.classList.add('completed');
+                }
+            }
+            const cur = document.getElementById(`wf-step-${stepNumber}`);
+            if (cur) cur.classList.add(completed ? 'completed' : 'active');
+        }
+
+        /* ─ XSS helper ────────────────────────────────────── */
+        function escapeHTML(str) {
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
     </script>
-
 </body>
-
 </html>

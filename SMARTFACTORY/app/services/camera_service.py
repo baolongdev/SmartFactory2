@@ -1,80 +1,177 @@
 # app/services/camera_service.py
+"""
+Camera Service - Singleton service managing camera pipeline and streaming.
+
+This module provides a high-level interface to the camera system:
+- Start/stop camera pipeline
+- Stream MJPEG video to clients
+- Get detection results
+- Update color configuration (hot-reload)
+
+Architecture:
+------------
+- CameraService: Singleton service class
+- CameraPipeline: Core processing pipeline (detection, tracking, drawing)
+- CameraReader: Threaded frame capture from USB/IP/MJPEG cameras
+- ColorDetector: HSV-based color detection
+- Tracker: Object tracking with unique IDs
+- DrawManager: Renders bounding boxes, labels, trajectories
+
+Usage:
+------
+    from app.services.camera_service import camera_service
+
+    # Start camera
+    camera_service.start()
+
+    # Get frame as JPEG bytes
+    frame = camera_service.get_frame_bytes()
+
+    # Get current detections
+    detections = camera_service.get_detections()
+
+    # Stop camera
+    camera_service.stop()
+"""
+
 import threading
 import time
 import cv2
 from typing import Any, Dict, List, Optional
+
+import structlog
 
 from app.core.camera.color_object import ColorObject
 from app.services.colors_service import colors_service
 from app.core.camera.pipeline import CameraPipeline
 from app.core.config import config_service
 
+# Module-level logger for CameraService
+logger = structlog.get_logger(__name__)
+
 
 class CameraService:
     """
-    Camera service singleton quản lý pipeline & streaming.
+    Singleton service managing camera pipeline lifecycle and streaming.
 
-    Vai trò:
-    - Quản lý vòng đời CameraPipeline (start/stop).
-    - Cung cấp API thân thiện cho layer API:
-        + stream() → MJPEG generator
-        + get_frame_bytes() → lấy 1 frame ảnh JPEG
-        + get_detections() → list detection chuẩn hoá cho FE
-        + get_status() → thông tin đơn giản
-    - Ẩn toàn bộ chi tiết core (CameraReader, ColorDetector, Tracker...).
-      Sau này đổi thuật toán detect chỉ cần sửa service + core,
-      không phải sửa các API.
+    This service provides:
+    - Camera pipeline start/stop management
+    - MJPEG streaming for web clients
+    - Detection results retrieval
+    - Color configuration hot-reload
+
+    Design Patterns:
+    - Singleton: Only one instance exists (camera_service)
+    - Facade: Hides complexity of pipeline internals from API layer
+    - Thread-Safe: Uses threading.Lock for start/stop operations
+
+    Responsibilities:
+    - Manage CameraPipeline lifecycle (create, start, stop)
+    - Provide thread-safe access to pipeline state
+    - Stream MJPEG frames to web clients
+    - Return normalized detection results for frontend
+    - Hot-reload color configuration when updated
+
+    Usage:
+        from app.services.camera_service import camera_service
+
+        # Start camera with default config
+        camera_service.start()
+
+        # Start with specific camera source
+        camera_service.start(src_override=1)
+
+        # Get stream generator
+        return Response(camera_service.stream(), ...)
+
+        # Get current detections
+        detections = camera_service.get_detections()
+
+        # Stop camera
+        camera_service.stop()
     """
 
     def __init__(self):
+        """Initialize CameraService with default state."""
         self.pipeline: Optional[CameraPipeline] = None
         self.running: bool = False
         self._lock = threading.Lock()
-        self.logger = None
 
     def init_app(self, app):
-        self.logger = app.logger
-        self.logger.info("CameraService ready")
+        """
+        Initialize service with Flask app reference.
+
+        Args:
+            app: Flask application instance (used for logging context)
+        """
+        logger.info("camera_service_ready")
 
     def start(self, src_override=None) -> bool:
+        """
+        Start camera pipeline with optional source override.
+
+        Args:
+            src_override: Camera source index or URL (optional)
+                         If provided, overrides config value
+
+        Returns:
+            bool: True if started successfully, False otherwise
+
+        Thread Safety:
+            This method acquires _lock to prevent concurrent starts
+        """
         with self._lock:
+            # Already running - idempotent operation
             if self.running:
                 return True
 
+            # Load camera configuration
             cfg = config_service.get_camera_config()
 
+            # Override camera source if requested
             if src_override is not None:
                 cfg.src = src_override
-                if self.logger:
-                    self.logger.info(f"Override camera source → {src_override}")
+                logger.info("camera_source_override", src=src_override)
 
             try:
+                # Create and initialize pipeline
                 self.pipeline = CameraPipeline(cfg)
 
-                # 🔥 NEW: VERIFY CAMERA OPENED OK
+                # Verify camera opened successfully
                 if not self.pipeline.camera.is_opened():
-                    if self.logger:
-                        self.logger.error("❌ Camera failed to open at source: %s", cfg.src)
+                    logger.error("camera_failed_to_open", src=cfg.src)
                     self.pipeline = None
                     self.running = False
                     return False
 
+                # Hot-reload current color configuration
                 self.update_colors()
+
+                # Start background detection loop
                 self.pipeline.start()
                 self.running = True
+                logger.info("camera_started", src=cfg.src)
                 return True
 
             except Exception as e:
-                if self.logger:
-                    self.logger.exception(f"Failed to start camera: {e}")
+                logger.exception("camera_start_failed", error_type=type(e).__name__, src=cfg.src)
                 self.running = False
                 self.pipeline = None
                 return False
 
 
     def stop(self) -> bool:
-        """Dừng camera pipeline an toàn."""
+        """
+        Stop camera pipeline safely.
+
+        Returns:
+            bool: True if stopped successfully or already stopped
+
+        Thread Safety:
+            Acquires _lock to prevent concurrent operations
+        """
         with self._lock:
+            # Already stopped
             if not self.running or not self.pipeline:
                 return True
 
@@ -82,23 +179,19 @@ class CameraService:
                 self.pipeline.stop()
                 self.pipeline = None
                 self.running = False
-
-                if self.logger:
-                    self.logger.info("CameraService stopped successfully")
-
+                logger.info("camera_stopped")
                 return True
 
             except Exception as e:
-                if self.logger:
-                    self.logger.exception(f"Error during camera stop: {e}")
+                logger.exception("camera_stop_failed", error_type=type(e).__name__)
                 return False
 
     def get_frame_bytes(self) -> Optional[bytes]:
         """
-        Lấy frame hiện tại dưới dạng JPEG bytes.
-        Dùng được cho:
-        - MJPEG stream
-        - API /snapshot tải 1 ảnh đơn.
+        Get current frame as JPEG bytes.
+
+        Returns:
+            Optional[bytes]: JPEG-encoded frame bytes, or None if pipeline not ready
         """
         if not self.pipeline:
             return None
@@ -106,11 +199,13 @@ class CameraService:
 
     def stream(self):
         """
-        Yield MJPEG frames cho /api/camera/stream.
+        Yield MJPEG frames for /api/camera/stream endpoint.
 
-        NOTE mở rộng:
-        - Nếu muốn giới hạn FPS stream (ví dụ 15fps) có thể
-          thêm time.sleep(1/15) trong vòng lặp.
+        Yields:
+            bytes: MJPEG frame chunks with appropriate headers
+
+        Note:
+            To limit FPS (e.g., 15fps), add time.sleep(1/15) in the loop.
         """
         try:
             while self.running:
@@ -127,20 +222,30 @@ class CameraService:
                 )
 
         except GeneratorExit:
-            if self.logger:
-                self.logger.info("Client disconnected from stream")
+            logger.info("stream_client_disconnected")
 
         except Exception as e:
-            if self.logger:
-                self.logger.exception(f"Error in stream generator: {e}")
+            logger.exception("stream_generator_error", error_type=type(e).__name__)
 
     def get_detections(self) -> Optional[List[Dict[str, Any]]]:
         """
-        Trả list các detection đã chuẩn hoá cho FE.
+        Return current detection results, normalized for frontend.
 
-        Return:
-            - None  → pipeline chưa sẵn sàng
-            - []    → không thấy đối tượng nào
+        Returns:
+            None: Pipeline not ready
+            []: No objects detected
+            List[Dict]: List of detection objects with keys:
+                - x, y: Top-left coordinates
+                - w, h: Width and height
+                - name: Color name
+                - bgr: BGR color tuple
+                - action_id: Action ID for MQTT command
+                - duration_ms: Action duration
+
+        Handles three cases:
+        1. Pipeline returns dict (from ColorObject.to_dict())
+        2. Pipeline returns ColorObject instance
+        3. Fallback for unknown types
         """
         if not self.pipeline:
             return None
@@ -149,10 +254,7 @@ class CameraService:
         detections: List[Dict[str, Any]] = []
 
         for o in raw_objs:
-
-            # ===============================================================
-            # 1) Trường hợp pipeline trả dict (từ ColorObject.to_dict())
-            # ===============================================================
+            # Case 1: Pipeline returns dict
             if isinstance(o, dict):
                 detections.append({
                     "x": o.get("x", 0),
@@ -164,10 +266,8 @@ class CameraService:
                     "action_id": o.get("action_id", 0),
                     "duration_ms": o.get("duration_ms", 1000),
                 })
-            
-            # ===============================================================
-            # 2) Trường hợp pipeline trả instance ColorObject
-            # ===============================================================
+
+            # Case 2: Pipeline returns ColorObject instance
             elif hasattr(o, "name"):
                 detections.append({
                     "x": getattr(o, "x", 0),
@@ -180,9 +280,7 @@ class CameraService:
                     "duration_ms": getattr(o, "duration_ms", 1000),
                 })
 
-            # ===============================================================
-            # 3) Fallback
-            # ===============================================================
+            # Case 3: Fallback
             else:
                 detections.append({
                     "x": 0, "y": 0, "w": 0, "h": 0,
@@ -197,17 +295,22 @@ class CameraService:
     
     def update_colors(self) -> bool:
         """
-        Hot-reload cấu hình màu cho ColorDetector
-        sau khi /api/colors được cập nhật.
+        Hot-reload color configuration for running pipeline.
+
+        Called after /api/colors is updated via POST request.
+        Updates the ColorDetector with new color definitions.
+
+        Returns:
+            bool: True if updated successfully, False if pipeline not ready
         """
         if not self.pipeline:
-            # Chưa start camera thì thôi, lần start sau sẽ tự load config mới
+            # Pipeline not running - will load new config on next start
             return False
 
-        # Lấy colors mới đã được fill đủ lower/upper/bgr từ ColorsService
+        # Get updated colors from ColorsService
         colors = colors_service.get_colors()
 
-        # Build lại danh sách ColorObject
+        # Build ColorObject list
         color_objects = [
             ColorObject(
                 c["name"],
@@ -220,28 +323,12 @@ class CameraService:
             for c in colors
         ]
 
-        # Gán thẳng vào detector đang chạy
+        # Update detector in running pipeline
         self.pipeline.detector.color_objects = color_objects
 
-        if self.logger:
-            self.logger.info("[CameraService] Hot-reloaded color config")
-
+        logger.info("camera_colors_hot_reloaded")
         return True
 
 
-    def get_status(self) -> dict:
-        """Return status đơn giản cho /api/camera/status."""
-        pipeline_ready = self.pipeline is not None
-        detected = len(self.pipeline.detections) if pipeline_ready else 0
-        tracked = len(self.pipeline.tracked) if pipeline_ready else 0
-
-        return {
-            "running": self.running,
-            "pipeline_ready": pipeline_ready,
-            "detected": detected,
-            "tracked": tracked,
-        }
-
-
-# Singleton instance
+# Singleton instance - imported by other modules
 camera_service = CameraService()

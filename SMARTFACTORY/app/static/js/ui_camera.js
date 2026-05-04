@@ -21,6 +21,7 @@ export function switchCameraType() {
     }
 }
 
+/* ================= Fullscreen ================= */
 export function initFullscreenButton() {
     window.toggleFullscreen = function () {
         if (!document.fullscreenElement) {
@@ -31,13 +32,17 @@ export function initFullscreenButton() {
     };
 }
 
+/* ================= Emergency Stop ================= */
 export function initEmergencyStop(sendMQTT) {
     window.emergencyStop = async function () {
         alert("🚨 Emergency Stop Triggered!");
-        await sendMQTT("emergency", "STOP");
+        if (sendMQTT) {
+            await sendMQTT("emergency", "STOP");
+        }
     };
 }
 
+/* ================= Load USB Cameras ================= */
 export async function loadUSBCameras() {
     const usbSelect = document.getElementById("usb-camera");
 
@@ -62,10 +67,8 @@ export async function loadUSBCameras() {
     }
 }
 
+// ================= IMAGE TRANSFORM =================
 
-// ========================= IMAGE TRANSFORM =========================
-
-// trạng thái transform
 let flipH = false;
 let flipV = false;
 let rotation = 0;

@@ -3,6 +3,8 @@
 import threading
 import time
 
+import structlog
+
 from app.core.camera import (
     CameraReader,
     ColorObject,
@@ -12,6 +14,8 @@ from app.core.camera import (
 )
 
 from app.core.config import config_service
+
+logger = structlog.get_logger(__name__)
 
 
 class CameraPipeline:
@@ -98,6 +102,7 @@ class CameraPipeline:
 
     def start(self):
         """Start background detection loop."""
+        logger.info("pipeline_starting")
         threading.Thread(target=self._detection_loop, daemon=True).start()
 
     # ---------------------------------------------------------
@@ -116,6 +121,7 @@ class CameraPipeline:
 
             frame = self.camera.read()
             if frame is None:
+                time.sleep(0.01)
                 continue
 
             # --------- CẬP NHẬT FPS ----------
@@ -145,6 +151,7 @@ class CameraPipeline:
     # ---------------------------------------------------------
 
     def stop(self):
+        logger.info("pipeline_stopping")
         self.running = False
         self.camera.stop()
 

@@ -1,22 +1,52 @@
-# Build files
+# ── Secrets / Environment ──────────────────────────────────────────
+.env
+.env.local
+.env.*.local
+
+# ── Python ─────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+*.egg
+*.egg-info/
 dist/
 build/
+.eggs/
+pip-wheel-metadata/
+MANIFEST
 
-# Python cache
-__pycache__/
-*.pyc
-
-# Virtual environment
+# ── Virtual environments ────────────────────────────────────────────
 venv/
-.env/
+.venv/
+env/
+ENV/
 
-# IDE files
+# ── IDE / Editor ────────────────────────────────────────────────────
 .vscode/
 .idea/
+*.swp
+*.swo
+*~
 
-# Logs
-*.log
-
-# OS junk files
-Thumbs.db
+# ── OS junk ─────────────────────────────────────────────────────────
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Logs ────────────────────────────────────────────────────────────
+*.log
+logs/
+
+# ── Claude Code internal ─────────────────────────────────────────────
+.claude/
+
+# ── Test / Coverage ──────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+
+# ── Jupyter ─────────────────────────────────────────────────────────
+.ipynb_checkpoints/

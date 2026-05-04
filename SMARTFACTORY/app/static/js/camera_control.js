@@ -2,6 +2,10 @@ import { CAMERA_API_BASE } from "./helpers.js";
 
 export let cameraRunning = false;
 
+/**
+ * Update camera-related UI elements based on running state
+ * @param {boolean} running - Whether camera is running
+ */
 export function setCameraUI(running) {
     const btnStart = document.getElementById("btn-start-camera");
     const btnStop = document.getElementById("btn-stop-camera");
@@ -15,16 +19,26 @@ export function setCameraUI(running) {
     }
 }
 
+/**
+ * Start camera with selected source
+ * Updates workflow step 1 (Camera Setup)
+ * @returns {boolean} - Whether camera started successfully
+ */
 export async function startCamera() {
     const videoEl = document.getElementById('video-stream');
     const camStatusEl = document.getElementById('camera-status');
 
+    cameraRunning = false;
+    setCameraUI(false);
+
+    // Update workflow: Step 1 active
+    if (window.updateWorkflowStep) {
+        window.updateWorkflowStep(1);
+    }
+
     const camType = document.getElementById('camera-type').value;
     const usbIndex = parseInt(document.getElementById('usb-camera').value, 10);
     const rtspUrl = document.getElementById('rtsp-url').value.trim();
-
-    cameraRunning = false;
-    setCameraUI(false);
 
     let source = camType === "rtsp" ? rtspUrl : usbIndex;
 
@@ -42,6 +56,7 @@ export async function startCamera() {
         });
     } catch (err) {
         console.error("[Camera] Fetch error:", err);
+        updateCameraStatus(false, "Camera Error");
         return false;
     }
 
@@ -62,9 +77,12 @@ export async function startCamera() {
         videoEl.src = `${CAMERA_API_BASE}/stream`;
         videoEl.style.display = "block";
 
-        camStatusEl.innerHTML =
-            '<i class="fas fa-circle" style="color:green;"></i> Camera Running';
+        // Update workflow: Step 1 completed, Step 2 active
+        if (window.updateWorkflowStep) {
+            window.updateWorkflowStep(2, true);
+        }
 
+        updateCameraStatus(true, "Camera Running");
         return true;
     }
 
@@ -74,12 +92,14 @@ export async function startCamera() {
     videoEl.src = "";
     videoEl.style.display = "none";
 
-    camStatusEl.innerHTML =
-        '<i class="fas fa-circle" style="color:red;"></i> Camera Error';
-
+    updateCameraStatus(false, "Camera Error");
     return false;
 }
 
+/**
+ * Stop camera
+ * Updates workflow steps accordingly
+ */
 export async function stopCamera() {
     const videoEl = document.getElementById('video-stream');
     const camStatusEl = document.getElementById('camera-status');
@@ -97,7 +117,30 @@ export async function stopCamera() {
     videoEl.src = "";
     videoEl.style.display = "none";
 
-    list.innerHTML = `<li style="color:#888;">No objects detected</li>`;
-    camStatusEl.innerHTML =
-        '<i class="fas fa-circle" style="color:gray;"></i> Camera Stopped';
+    list.innerHTML = `<li class="sf-placeholder sf-empty">No objects detected</li>`;
+
+    updateCameraStatus(false, "Camera Stopped");
+
+    // Reset workflow steps
+    if (window.updateWorkflowStep) {
+        window.updateWorkflowStep(1, null);
+    }
+}
+
+/**
+ * Update camera status indicator
+ * @param {boolean} running - Camera running state
+ * @param {string} text - Status text
+ */
+function updateCameraStatus(running, text) {
+    const camStatusEl = document.getElementById('camera-status');
+    if (!camStatusEl) return;
+
+    if (running) {
+        camStatusEl.className = "status-indicator status-online";
+        camStatusEl.innerHTML = '<span class="dot-pulse"></span><span>' + text + '</span>';
+    } else {
+        camStatusEl.className = "status-indicator status-offline";
+        camStatusEl.innerHTML = '<span class="dot-pulse"></span><span>' + text + '</span>';
+    }
 }

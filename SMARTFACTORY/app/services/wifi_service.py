@@ -1,11 +1,16 @@
 import subprocess
 import platform
 import re
+import threading
+import logging
+
+logger = logging.getLogger(__name__)
 
 # ======================================================
 # WIFI CACHE
 # ======================================================
 wifi_cache = {}
+wifi_cache_lock = threading.Lock()
 SCAN_LIMIT = 10  # mất 10 lần scan liên tiếp thì xoá khỏi list
 
 
@@ -116,7 +121,7 @@ def scan_wifi_linux():
         return wifi_list
 
     except Exception as e:
-        print("[SCAN LINUX ERROR]", e)
+        logger.error("[SCAN LINUX ERROR] %s", e)
         return []
 
 
@@ -201,7 +206,7 @@ def scan_wifi_windows():
         return wifi_list
 
     except Exception as e:
-        print("[SCAN WIN ERROR]", e)
+        logger.error("[SCAN WIN ERROR] %s", e)
         return []
 
 
@@ -217,30 +222,31 @@ def merge_scan_with_cache(raw_list):
     """
     global wifi_cache
 
-    seen = set()
+    with wifi_cache_lock:
+        seen = set()
 
-    for ap in raw_list:
-        key = ap.get("bssid") or ap.get("ssid")
-        if not key:
-            continue
+        for ap in raw_list:
+            key = ap.get("bssid") or ap.get("ssid")
+            if not key:
+                continue
 
-        seen.add(key)
+            seen.add(key)
 
-        if key not in wifi_cache:
-            wifi_cache[key] = {"data": ap, "missing": 0}
-        else:
-            wifi_cache[key]["data"] = ap
-            wifi_cache[key]["missing"] = 0
+            if key not in wifi_cache:
+                wifi_cache[key] = {"data": ap, "missing": 0}
+            else:
+                wifi_cache[key]["data"] = ap
+                wifi_cache[key]["missing"] = 0
 
-    # tăng missing cho AP không thấy trong lần scan này
-    for key in list(wifi_cache.keys()):
-        if key not in seen:
-            wifi_cache[key]["missing"] += 1
-            if wifi_cache[key]["missing"] >= SCAN_LIMIT:
-                del wifi_cache[key]
+        # tăng missing cho AP không thấy trong lần scan này
+        for key in list(wifi_cache.keys()):
+            if key not in seen:
+                wifi_cache[key]["missing"] += 1
+                if wifi_cache[key]["missing"] >= SCAN_LIMIT:
+                    del wifi_cache[key]
 
-    # trả về list AP hiện còn trong cache
-    return [wifi_cache[k]["data"] for k in wifi_cache]
+        # trả về list AP hiện còn trong cache
+        return [wifi_cache[k]["data"] for k in wifi_cache]
 
 
 # ======================================================
@@ -313,7 +319,7 @@ def wifi_status_linux():
         return {}
 
     except Exception as e:
-        print("[STATUS LINUX ERROR]", e)
+        logger.error("[STATUS LINUX ERROR] %s", e)
         return {}
 
 
@@ -376,7 +382,7 @@ def wifi_status_windows():
         return status
 
     except Exception as e:
-        print("[STATUS WIN ERROR]", e)
+        logger.error("[STATUS WIN ERROR] %s", e)
         return {}
 
 

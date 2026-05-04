@@ -2,12 +2,11 @@ import { COLOR_API_BASE } from "./helpers.js";
 
 /* ============================================================
    LOAD CONFIG
-============================================================ */
+   ============================================================ */
 export async function loadColorConfig() {
     try {
         const res = await fetch(`${COLOR_API_BASE}/`);
         const data = await res.json();
-
         return Array.isArray(data.colors) ? data.colors : [];
     } catch (err) {
         console.error("[ColorConfig] Load failed:", err);
@@ -17,7 +16,7 @@ export async function loadColorConfig() {
 
 /* ============================================================
    SAVE CONFIG
-============================================================ */
+   ============================================================ */
 export async function saveColorConfigToServer(colors) {
     try {
         const res = await fetch(`${COLOR_API_BASE}/`, {
@@ -25,7 +24,6 @@ export async function saveColorConfigToServer(colors) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(colors),
         });
-
         return await res.json();
     } catch (err) {
         console.error("[ColorConfig] Save failed:", err);
@@ -34,8 +32,24 @@ export async function saveColorConfigToServer(colors) {
 }
 
 /* ============================================================
-   BUILD 1 TABLE ROW
-============================================================ */
+   COLOR HEX LOOKUP
+   ============================================================ */
+function getColorHex(name) {
+    const hexMap = {
+        red:    "#dc2626",
+        green:  "#16a34a",
+        blue:   "#2563eb",
+        yellow: "#ca8a04",
+        orange: "#ea580c",
+        purple: "#9333ea",
+        pink:   "#db2777"
+    };
+    return hexMap[name] || "#6b7280";
+}
+
+/* ============================================================
+   BUILD TABLE ROW
+   ============================================================ */
 export function buildColorRow(color) {
     const name = color.name || "red";
     const action = color.action_id ?? 0;
@@ -45,32 +59,31 @@ export function buildColorRow(color) {
         "red", "green", "blue",
         "yellow", "orange", "purple", "pink"
     ].map(m =>
-        `<option value="${m}" style="color:#000;"
-            ${name === m ? "selected" : ""}>
+        `<option value="${m}" ${name === m ? "selected" : ""}>
             ${m.charAt(0).toUpperCase() + m.slice(1)}
         </option>`
     ).join("");
 
-
     return `
-        <tr class="color-row color-${name}">
+        <tr class="color-row">
             <td>
-                <select class="color-name" onchange="updateRowColor(this)">
-                    ${options}
-                </select>
+                <div class="flex items-center gap-2">
+                    <span class="color-dot" style="background:${getColorHex(name)}"></span>
+                    <select class="color-name">
+                        ${options}
+                    </select>
+                </div>
             </td>
-
             <td>
                 <input type="number" class="color-action" value="${action}" min="1" max="10">
             </td>
-
             <td>
-                <input type="number" class="color-duration" value="${duration}" min="2000" max="10000">
+                <input type="number" class="color-duration" value="${duration}" min="500" max="10000">
             </td>
-
-            <td>
-                <button class="color-remove-btn" onclick="this.closest('tr').remove()">
-                    X
+            <td style="text-align:center; width:40px;">
+                <button style="background:var(--destructive-muted);color:var(--destructive);border:1px solid var(--destructive);border-radius:var(--radius);width:26px;height:26px;cursor:pointer;font-size:0.7rem;"
+                        onclick="this.closest('tr').remove()" title="Remove">
+                    <i class="fas fa-times"></i>
                 </button>
             </td>
         </tr>
@@ -79,13 +92,13 @@ export function buildColorRow(color) {
 
 /* ============================================================
    RENDER TABLE
-============================================================ */
+   ============================================================ */
 export async function renderColorTable() {
     const table = document.getElementById("color-table-body");
     const list = await loadColorConfig();
 
     if (!list.length) {
-        table.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#777;">No Colors</td></tr>`;
+        table.innerHTML = `<tr><td colspan="4" class="px-3 py-4 text-center sf-empty">No colors configured</td></tr>`;
         return;
     }
 
@@ -94,7 +107,7 @@ export async function renderColorTable() {
 
 /* ============================================================
    SAVE (FROM TABLE → SERVER)
-============================================================ */
+   ============================================================ */
 export async function saveColorConfig() {
     const rows = document.querySelectorAll("#color-table-body tr");
     const colors = [];
@@ -114,15 +127,15 @@ export async function saveColorConfig() {
     const res = await saveColorConfigToServer(colors);
 
     if (res.status === "success") {
-        alert("Color Configuration Saved!");
+        showToast("Color config saved", "success");
     } else {
-        alert("Save Failed!");
+        showToast("Save failed!", "error");
     }
 }
 
 /* ============================================================
    ADD NEW ROW
-============================================================ */
+   ============================================================ */
 export function addNewColorRow() {
     const table = document.getElementById("color-table-body");
     table.insertAdjacentHTML(
