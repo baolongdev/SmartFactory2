@@ -106,6 +106,20 @@ class CameraService:
         """
         logger.info("camera_service_ready")
 
+    def _is_healthy(self) -> bool:
+        """Return True if pipeline is running and has produced at least one frame."""
+        return self.pipeline is not None and self.pipeline._jpeg is not None
+
+    def _stop_unlocked(self) -> None:
+        """Stop pipeline without acquiring _lock (caller must already hold it)."""
+        if self.pipeline:
+            try:
+                self.pipeline.stop()
+            except Exception:
+                pass
+        self.pipeline = None
+        self.running = False
+
     def start(self, src_override=None) -> bool:
         """
         Start camera pipeline with optional source override.
@@ -117,44 +131,76 @@ class CameraService:
         Returns:
             bool: True if started successfully, False otherwise
 
-        Thread Safety:
-            This method acquires _lock to prevent concurrent starts
+        Health check:
+            If self.running is True but the pipeline is stale (no frames),
+            the pipeline is automatically restarted instead of returning
+            a false-positive True.
+
+        First-frame wait:
+            After starting, blocks up to 5 s waiting for the first JPEG
+            frame so the caller can be confident the stream is live.
+            Slow / RTSP cameras that miss the deadline still succeed but
+            log a warning.
         """
         with self._lock:
-            # Already running - idempotent operation
             if self.running:
-                return True
+                if self._is_healthy():
+                    # Pipeline alive and producing frames — nothing to do.
+                    return True
+                # Flag says running but no frames — stale/broken state.
+                logger.warning("camera_pipeline_stale_restarting")
+                self._stop_unlocked()
 
-            # Load camera configuration
             cfg = config_service.get_camera_config()
 
-            # Override camera source if requested
             if src_override is not None:
                 cfg.src = src_override
                 logger.info("camera_source_override", src=src_override)
 
             try:
-                # Create and initialize pipeline
                 self.pipeline = CameraPipeline(cfg)
 
-                # Verify camera opened successfully
-                if not self.pipeline.camera.is_opened():
-                    logger.error("camera_failed_to_open", src=cfg.src)
-                    self.pipeline = None
-                    self.running = False
-                    return False
+                # ── Immediate open check (USB / RTSP via VideoCapture) ────
+                # For MJPEG-over-HTTP, is_opened() returns False until the
+                # first frame arrives — skip this check and let the
+                # first-frame wait below handle it instead.
+                if not self.pipeline.camera.is_mjpeg:
+                    if not self.pipeline.camera.is_opened():
+                        logger.error("camera_failed_to_open", src=cfg.src)
+                        self.pipeline = None
+                        self.running = False
+                        return False
 
-                # Hot-reload current color configuration
                 self.update_colors()
-
-                # Start background detection loop
                 self.pipeline.start()
                 self.running = True
+
+                # ── Wait for first frame ──────────────────────────────────
+                # Unified check for all source types:
+                #   USB   — frame arrives in < 1 s after cap.read()
+                #   RTSP  — frame arrives in 1-3 s after network connect
+                #   MJPEG — frame arrives after HTTP connection + first chunk
+                # If no frame within timeout → genuine failure (device not
+                # reachable / wrong URL / wrong index).
+                timeout_s = 8.0 if isinstance(cfg.src, str) else 4.0
+                deadline  = time.time() + timeout_s
+                while time.time() < deadline:
+                    if self.pipeline._jpeg is not None:
+                        break
+                    time.sleep(0.05)
+
+                if self.pipeline._jpeg is None:
+                    logger.error("camera_no_frame_received",
+                                 src=cfg.src, timeout_s=timeout_s)
+                    self._stop_unlocked()
+                    return False
+
                 logger.info("camera_started", src=cfg.src)
                 return True
 
             except Exception as e:
-                logger.exception("camera_start_failed", error_type=type(e).__name__, src=cfg.src)
+                logger.exception("camera_start_failed",
+                                 error_type=type(e).__name__, src=cfg.src)
                 self.running = False
                 self.pipeline = None
                 return False
@@ -254,30 +300,32 @@ class CameraService:
         detections: List[Dict[str, Any]] = []
 
         for o in raw_objs:
-            # Case 1: Pipeline returns dict
+            # Case 1: Pipeline returns dict (standard path after our pipeline update)
             if isinstance(o, dict):
                 detections.append({
-                    "x": o.get("x", 0),
-                    "y": o.get("y", 0),
-                    "w": o.get("w", 0),
-                    "h": o.get("h", 0),
-                    "name": o.get("color_name") or o.get("name", "unknown"),
-                    "bgr": list(o.get("bgr", (255, 255, 255))),
-                    "action_id": o.get("action_id", 0),
+                    "x":          o.get("x", 0),
+                    "y":          o.get("y", 0),
+                    "w":          o.get("w", 0),
+                    "h":          o.get("h", 0),
+                    "name":       o.get("color_name") or o.get("name", "unknown"),
+                    "bgr":        list(o.get("bgr", (255, 255, 255))),
+                    "action_id":  o.get("action_id", 0),
                     "duration_ms": o.get("duration_ms", 1000),
+                    "tracker_id": o.get("tracker_id"),   # unique object ID from Tracker
                 })
 
             # Case 2: Pipeline returns ColorObject instance
             elif hasattr(o, "name"):
                 detections.append({
-                    "x": getattr(o, "x", 0),
-                    "y": getattr(o, "y", 0),
-                    "w": getattr(o, "w", 0),
-                    "h": getattr(o, "h", 0),
-                    "name": getattr(o, "name", "unknown"),
-                    "bgr": list(getattr(o, "bgr", (255, 255, 255))),
-                    "action_id": getattr(o, "action_id", 0),
+                    "x":          getattr(o, "x", 0),
+                    "y":          getattr(o, "y", 0),
+                    "w":          getattr(o, "w", 0),
+                    "h":          getattr(o, "h", 0),
+                    "name":       getattr(o, "name", "unknown"),
+                    "bgr":        list(getattr(o, "bgr", (255, 255, 255))),
+                    "action_id":  getattr(o, "action_id", 0),
                     "duration_ms": getattr(o, "duration_ms", 1000),
+                    "tracker_id": getattr(o, "tracker_id", None),
                 })
 
             # Case 3: Fallback
@@ -288,6 +336,7 @@ class CameraService:
                     "bgr": [200, 200, 200],
                     "action_id": 0,
                     "duration_ms": 1000,
+                    "tracker_id": None,
                 })
 
         return detections

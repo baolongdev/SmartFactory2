@@ -1,6 +1,7 @@
 {
-    "debug": true,
+    "version": "1.0.0",
+    "debug": false,
     "camera_config": "config/config_camera.json",
-    "mqtt_config": "config/config_mqtt.json",
-    "color_config": "config/colors.json"
+    "mqtt_config":   "config/config_mqtt.json",
+    "color_config":  "config/colors.json"
 }

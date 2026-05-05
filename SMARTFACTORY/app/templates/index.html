@@ -80,7 +80,73 @@
             font-family: 'Inter', system-ui, sans-serif;
             background: var(--bg); color: var(--fg);
             height: 100%;
+            transition: background 0.2s ease, color 0.2s ease;
         }
+
+        /* ── Smooth theme transition (class applied briefly via JS) ── */
+        html.theme-transition :not([style*="animation"]):not(.dot-pulse) {
+            transition-property: background-color, border-color, color !important;
+            transition-duration: 200ms !important;
+            transition-timing-function: ease !important;
+        }
+
+        /* ═══════════════════════════════════════════════════════
+           HEADER LAYOUT
+        ═══════════════════════════════════════════════════════ */
+        .sf-header {
+            display: flex; align-items: center;
+            gap: 10px; padding: 0 18px; min-height: 52px;
+            background: var(--bg-subtle);
+            border-bottom: 1px solid var(--border);
+            transition: background 0.2s ease, border-color 0.2s ease;
+        }
+
+        /* Brand ─────────────────────────────────────────── */
+        .sf-header-brand {
+            display: flex; align-items: center;
+            gap: 10px; flex-shrink: 0;
+        }
+        .sf-logo {
+            width: 28px; height: 28px; border-radius: 6px;
+            display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+            color: #fff; font-size: 0.72rem; flex-shrink: 0;
+        }
+        .sf-brand-name {
+            font-weight: 700; font-size: 0.82rem;
+            color: var(--fg); line-height: 1.1; white-space: nowrap;
+            transition: color 0.2s ease;
+        }
+        .sf-brand-sub {
+            font-size: 0.58rem; font-weight: 700;
+            color: var(--primary); letter-spacing: 0.08em;
+            margin-top: 2px; white-space: nowrap;
+        }
+
+        /* Right actions ─────────────────────────────────── */
+        .sf-header-actions {
+            display: flex; align-items: center;
+            gap: 6px; flex-shrink: 0; margin-left: auto;
+        }
+
+        /* Language switcher ─────────────────────────────── */
+        .sf-lang-select {
+            height: 28px; padding: 0 22px 0 8px;
+            border: 1px solid var(--border);
+            background: var(--bg); color: var(--fg-muted);
+            border-radius: var(--radius); cursor: pointer;
+            font-size: 0.68rem; font-weight: 700; letter-spacing: 0.04em;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+            -webkit-appearance: none; appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6' viewBox='0 0 10 6'%3E%3Cpath fill='%2394a3b8' d='M0 0l5 6 5-6z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 7px center;
+        }
+        .sf-lang-select:hover { border-color: var(--primary); color: var(--fg); }
+        .sf-lang-select:focus { border-color: var(--primary); }
+        .sf-lang-select option { background: var(--bg); color: var(--fg); }
 
         /* ═══════════════════════════════════════════════════════
            SCROLLBAR
@@ -106,6 +172,7 @@
             padding: 3px 10px; border-radius: 9999px;
             font-size: 0.7rem; font-weight: 600; letter-spacing: 0.03em;
             border: 1px solid transparent;
+            transition: background 0.25s ease, color 0.25s ease, border-color 0.25s ease;
         }
         .status-online {
             background: var(--success-muted);
@@ -152,34 +219,6 @@
             background: white; animation: pulse-dot 1.2s ease-in-out infinite;
         }
 
-        /* ═══════════════════════════════════════════════════════
-           WORKFLOW STEPS
-        ═══════════════════════════════════════════════════════ */
-        .workflow-step {
-            display: flex; align-items: center; gap: 9px;
-            padding: 7px 11px; border-radius: var(--radius);
-            border: 1px solid var(--border); background: var(--bg-muted);
-            transition: border-color 0.2s, background 0.2s;
-            flex: 1;
-        }
-        .workflow-step.active    { border-color: var(--primary);     background: var(--primary-muted); }
-        .workflow-step.completed { border-color: var(--success);     background: var(--success-muted); }
-
-        .step-number {
-            width: 24px; height: 24px; border-radius: 50%;
-            display: flex; align-items: center; justify-content: center;
-            font-weight: 700; font-size: 0.72rem; flex-shrink: 0;
-            background: var(--border); color: var(--fg-muted);
-            transition: background 0.2s, color 0.2s;
-        }
-        .workflow-step.active    .step-number { background: var(--primary); color: var(--primary-fg); }
-        .workflow-step.completed .step-number { background: var(--success); color: #fff; }
-
-        .step-content { min-width: 0; }
-        .step-title { font-weight: 600; font-size: 0.73rem; color: var(--fg-muted); white-space: nowrap; }
-        .step-desc  { font-size: 0.63rem; color: var(--fg-subtle); margin-top: 1px; white-space: nowrap; }
-        .workflow-step.active    .step-title { color: var(--primary); }
-        .workflow-step.completed .step-title { color: var(--success); }
 
         /* ═══════════════════════════════════════════════════════
            CARD
@@ -188,6 +227,7 @@
             background: var(--bg-subtle);
             border: 1px solid var(--border);
             border-radius: var(--radius);
+            transition: background 0.2s ease, border-color 0.2s ease;
         }
         .sf-card-header {
             display: flex; align-items: center; gap: 8px;
@@ -195,6 +235,7 @@
             border-bottom: 1px solid var(--border);
             font-size: 0.68rem; font-weight: 700;
             color: var(--fg-muted); letter-spacing: 0.07em; text-transform: uppercase;
+            transition: border-color 0.2s ease, color 0.2s ease;
         }
         .sf-card-header i { color: var(--primary); }
         .sf-card-body { padding: 13px; }
@@ -209,7 +250,7 @@
             height: 34px; padding: 0 10px;
             font-size: 0.8rem; font-family: inherit;
             outline: none;
-            transition: border-color 0.15s, background 0.15s;
+            transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
             -webkit-appearance: none; -moz-appearance: none; appearance: none;
         }
         /* Select-specific */
@@ -320,6 +361,7 @@
             display: inline-block; width: 11px; height: 11px;
             border-radius: 50%; flex-shrink: 0;
             border: 1px solid var(--border);
+            transition: background 0.2s ease;
         }
 
         /* ═══════════════════════════════════════════════════════
@@ -352,7 +394,7 @@
             border: 1px solid transparent; border-radius: 4px;
             outline: none; font-size: 0.78rem; font-family: inherit;
             padding: 3px 5px; width: 100%;
-            transition: border-color 0.15s, background 0.15s;
+            transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
             -webkit-appearance: none; -moz-appearance: none; appearance: none;
         }
         .color-name:hover, .color-action:hover, .color-duration:hover {
@@ -383,12 +425,16 @@
             font-size: 0.75rem; font-weight: 600;
             background: var(--bg-muted); color: var(--fg-subtle);
             border: 1px solid var(--border); text-align: center;
+            transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
         }
 
         /* ═══════════════════════════════════════════════════════
            DETECTION COUNT BADGE
         ═══════════════════════════════════════════════════════ */
-        .count-badge { background: var(--bg-muted); color: var(--fg-subtle); }
+        .count-badge {
+            background: var(--bg-muted); color: var(--fg-subtle);
+            transition: background 0.25s ease, color 0.25s ease;
+        }
         .count-badge.has-detections { background: var(--success-muted); color: var(--success); }
 
         /* ═══════════════════════════════════════════════════════
@@ -488,14 +534,17 @@
 
         /* ── Mobile  < 640px ─────────────────────────────────── */
         @media (max-width: 639px) {
-            /* Header: compact — hide text labels */
-            header { padding-left: 10px; padding-right: 10px; gap: 6px; }
-            .sf-status-label { display: none; }
-            .sf-nav-label    { display: none; }
-            .sf-btn-label    { display: none; }
-            .sf-sep          { display: none; }
-            .sf-fullscreen-btn { display: none; }
-            .status-indicator  { padding: 3px 8px; gap: 4px; font-size: 0.67rem; }
+            /* Header: icons-only mode */
+            .sf-header          { padding: 0 10px; gap: 6px; min-height: 48px; }
+            .sf-header-workflow { display: none; }           /* hide steps */
+            .sf-brand-sub       { display: none; }
+            .sf-status-label    { display: none; }
+            .sf-nav-label       { display: none; }
+            .sf-btn-label       { display: none; }
+            .sf-sep             { display: none; }
+            .sf-fullscreen-btn  { display: none; }
+            .sf-header-actions  { gap: 4px; }
+            .status-indicator   { padding: 3px 6px; gap: 4px; font-size: 0.67rem; }
 
             /* Video pane */
             .sf-layout-video { padding: 8px 8px 0; }
@@ -507,29 +556,28 @@
             }
             .sf-layout-sidebar > .sf-card { flex: 1 1 260px; }
 
-            /* Card inner scroll heights — shorter on mobile */
+            /* Card inner scroll heights */
             #detected-list  { max-height: 110px !important; }
             #mqtt-log       { max-height: 110px !important; }
 
-            /* Color table: hide "ms" column to save space */
+            /* Color table: hide "ms" column */
             #color-table-body td:nth-child(3),
             #color-table-body thead th:nth-child(3) { display: none; }
-
-            /* Workflow steps: hide step-desc on very small screens */
-            .step-desc { display: none; }
         }
 
         /* ── Very small  < 400px ─────────────────────────────── */
         @media (max-width: 399px) {
-            .sf-brand-sub { display: none; }
-            .status-indicator { padding: 2px 6px; }
-            header { gap: 4px; }
+            .sf-header        { padding: 0 8px; gap: 4px; }
+            .sf-brand-name    { display: none; }   /* icon-only brand */
+            .status-indicator { padding: 2px 5px; }
         }
 
         /* ── Small tablet  640–767px ────────────────────────── */
         @media (min-width: 640px) and (max-width: 767px) {
+            .sf-header { padding: 0 12px; gap: 8px; }
             .sf-status-label { display: none; }
-            header { padding-left: 14px; padding-right: 14px; }
+            .sf-header-actions { gap: 5px; }
+
             .sf-layout-video { padding: 10px 10px 0; }
             .sf-layout-sidebar {
                 display: grid; grid-template-columns: 1fr 1fr;
@@ -539,18 +587,22 @@
 
         /* ── Tablet  768–1023px ──────────────────────────────── */
         @media (min-width: 768px) and (max-width: 1023px) {
+            .sf-header { padding: 0 14px; gap: 10px; }
+
             .sf-layout-video { padding: 14px 14px 0; }
             .sf-layout-sidebar {
                 display: grid; grid-template-columns: repeat(3, 1fr);
                 gap: 14px; padding: 14px;
             }
-            /* MQTT log spans full row */
             .sf-layout-sidebar > .sf-card:last-child { grid-column: 1 / -1; }
         }
 
         /* ── Large desktop  ≥ 1280px ────────────────────────── */
         @media (min-width: 1280px) {
-            .sf-layout-sidebar { width: 320px !important; }
+            .sf-header { padding: 0 24px; gap: 14px; }
+            .sf-header-workflow { gap: 8px; padding: 0 16px; }
+            .sf-header-actions  { gap: 8px; }
+            .sf-layout-sidebar  { width: 320px !important; }
         }
     </style>
 </head>
@@ -558,85 +610,61 @@
 <body class="sf-layout-body h-screen flex flex-col overflow-hidden">
 
     <!-- ═══════════════════════════════════════ TOP NAVIGATION ══ -->
-    <header class="flex-none flex items-center justify-between px-4 gap-2"
-            style="min-height:52px; background:var(--bg-subtle); border-bottom:1px solid var(--border);">
+    <header class="sf-header flex-none">
 
-        <!-- Brand -->
-        <div class="flex items-center gap-2.5 flex-shrink-0">
-            <div class="w-7 h-7 rounded flex items-center justify-center flex-shrink-0"
-                 style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);">
-                <i class="fas fa-industry text-white" style="font-size:0.72rem;"></i>
+        <!-- ── Brand ──────────────────────────────────────── -->
+        <div class="sf-header-brand">
+            <div class="sf-logo">
+                <i class="fas fa-industry"></i>
             </div>
             <div>
-                <div class="font-bold leading-none" style="font-size:0.8rem; color:var(--fg);">SmartFactory</div>
-                <div class="sf-brand-sub font-semibold" style="font-size:0.6rem; color:var(--primary); letter-spacing:0.08em;">CONTROL v1.0</div>
+                <div class="sf-brand-name">SmartFactory</div>
+                <div class="sf-brand-sub" data-i18n="brand.sub">CONTROL v1.0</div>
             </div>
         </div>
 
-        <!-- Workflow Steps (center) -->
-        <div class="hidden lg:flex items-center gap-2 flex-1 mx-5 max-w-2xl">
-            <div id="step-1" class="workflow-step">
-                <div class="step-number">1</div>
-                <div class="step-content">
-                    <div class="step-title">Camera Setup</div>
-                    <div class="step-desc">Init source</div>
-                </div>
-            </div>
-            <i class="fas fa-chevron-right flex-shrink-0"
-               style="color:var(--border); font-size:0.6rem;"></i>
-            <div id="step-2" class="workflow-step">
-                <div class="step-number">2</div>
-                <div class="step-content">
-                    <div class="step-title">Color Detect</div>
-                    <div class="step-desc">HSV analysis</div>
-                </div>
-            </div>
-            <i class="fas fa-chevron-right flex-shrink-0"
-               style="color:var(--border); font-size:0.6rem;"></i>
-            <div id="step-3" class="workflow-step">
-                <div class="step-number">3</div>
-                <div class="step-content">
-                    <div class="step-title">Object Track</div>
-                    <div class="step-desc">ID assignment</div>
-                </div>
-            </div>
-            <i class="fas fa-chevron-right flex-shrink-0"
-               style="color:var(--border); font-size:0.6rem;"></i>
-            <div id="step-4" class="workflow-step">
-                <div class="step-number">4</div>
-                <div class="step-content">
-                    <div class="step-title">Conveyor CMD</div>
-                    <div class="step-desc">MQTT publish</div>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right controls -->
-        <div class="flex items-center gap-2 flex-shrink-0">
-            <div id="mqtt-status" class="status-indicator status-offline">
+        <!-- ── Right Controls ─────────────────────────────── -->
+        <div class="sf-header-actions">
+            <div id="mqtt-status" class="status-indicator status-offline"
+                 data-i18n-title="tip.mqtt" title="MQTT Broker">
                 <span class="dot-pulse"></span>
                 <span class="sf-status-label">MQTT</span>
             </div>
-            <div id="camera-status" class="status-indicator status-offline">
+            <div id="camera-status" class="status-indicator status-offline"
+                 data-i18n-title="tip.camera" title="Camera">
                 <span class="dot-pulse"></span>
                 <span class="sf-status-label">Camera</span>
             </div>
             <span class="sf-sep"></span>
-            <a href="/wifi" class="nav-link">
-                <i class="fas fa-wifi"></i><span class="sf-nav-label">WiFi</span>
+
+            <!-- Language switcher -->
+            <select id="lang-select" class="sf-lang-select">
+                <option value="vi">VI</option>
+                <option value="en">EN</option>
+                <option value="ja">JA</option>
+            </select>
+            <span class="sf-sep"></span>
+
+            <a href="/wifi" class="nav-link" data-i18n-title="tip.wifi" title="WiFi Settings">
+                <i class="fas fa-wifi"></i>
+                <span class="sf-nav-label" data-i18n="nav.wifi">WiFi</span>
             </a>
-            <button onclick="toggleFullscreen()" class="nav-link sf-fullscreen-btn" title="Fullscreen">
+            <button onclick="toggleFullscreen()" class="nav-link sf-fullscreen-btn"
+                    data-i18n-title="tip.fullscreen" title="Fullscreen">
                 <i class="fas fa-expand"></i>
             </button>
-            <button onclick="toggleTheme()" class="theme-toggle" title="Toggle theme" id="theme-btn">
+            <button onclick="toggleTheme()" class="theme-toggle" id="theme-btn"
+                    data-i18n-title="tip.theme.dark" title="Switch to Light Mode">
                 <i class="fas fa-moon"></i>
             </button>
             <button onclick="emergencyStop()"
                     class="sf-btn sf-btn-danger sf-btn-sm"
-                    title="Emergency Stop">
-                <i class="fas fa-triangle-exclamation"></i><span class="sf-btn-label"> E-STOP</span>
+                    data-i18n-title="tip.estop" title="Emergency Stop">
+                <i class="fas fa-triangle-exclamation"></i>
+                <span class="sf-btn-label" data-i18n="nav.estop">E-STOP</span>
             </button>
         </div>
+
     </header>
 
     <!-- ══════════════════════════════════════════ MAIN BODY ══ -->
@@ -656,22 +684,26 @@
                 <!-- Placeholder -->
                 <div id="no-camera-placeholder" class="no-camera-placeholder">
                     <i class="fas fa-video-slash"></i>
-                    <p>CAMERA NOT STARTED</p>
-                    <small>Select a source and press Start</small>
+                    <p data-i18n="cam.ph.title">CAMERA NOT STARTED</p>
+                    <small data-i18n="cam.ph.sub">Select a source and press Start</small>
                 </div>
 
                 <!-- Video transform overlay -->
                 <div class="video-overlay-buttons">
-                    <button onclick="flipHorizontal()" title="Flip Horizontal">
+                    <button onclick="flipHorizontal()"
+                            data-i18n-title="tip.fliph" title="Flip Horizontal">
                         <i class="fas fa-arrows-left-right"></i>
                     </button>
-                    <button onclick="flipVertical()" title="Flip Vertical">
+                    <button onclick="flipVertical()"
+                            data-i18n-title="tip.flipv" title="Flip Vertical">
                         <i class="fas fa-arrows-up-down"></i>
                     </button>
-                    <button onclick="rotateVideo()" title="Rotate 90°">
+                    <button onclick="rotateVideo()"
+                            data-i18n-title="tip.rotate" title="Rotate 90°">
                         <i class="fas fa-rotate-right"></i>
                     </button>
-                    <button onclick="resetTransform()" class="danger" title="Reset Transform">
+                    <button onclick="resetTransform()" class="danger"
+                            data-i18n-title="tip.reset" title="Reset Transform">
                         <i class="fas fa-undo"></i>
                     </button>
                 </div>
@@ -686,15 +718,15 @@
             <div class="sf-card">
                 <div class="sf-card-header">
                     <i class="fas fa-camera"></i>
-                    Camera Source
+                    <span data-i18n="cam.title">Camera Source</span>
                 </div>
                 <div class="sf-card-body flex flex-col gap-3">
                     <div>
-                        <label class="sf-label">Type</label>
+                        <label class="sf-label" data-i18n="cam.type">Type</label>
                         <div class="relative">
                             <select id="camera-type" class="sf-select">
-                                <option value="usb">USB Camera</option>
-                                <option value="rtsp">RTSP / IP Camera</option>
+                                <option value="usb"  data-i18n="cam.usb">USB Camera</option>
+                                <option value="rtsp" data-i18n="cam.rtsp">RTSP / IP Camera</option>
                             </select>
                             <i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
                                style="color:var(--fg-subtle); font-size:0.62rem;"></i>
@@ -702,7 +734,7 @@
                     </div>
 
                     <div id="usb-group">
-                        <label class="sf-label">Device</label>
+                        <label class="sf-label" data-i18n="cam.device">Device</label>
                         <div class="relative">
                             <select id="usb-camera" class="sf-select">
                                 <option value="0">Camera 0</option>
@@ -713,19 +745,19 @@
                     </div>
 
                     <div id="rtsp-group" style="display:none;">
-                        <label class="sf-label">Stream URL</label>
-                        <input id="rtsp-url" type="text"
-                               placeholder="rtsp:// or http://" class="sf-input">
+                        <label class="sf-label" data-i18n="cam.url">Stream URL</label>
+                        <input id="rtsp-url" type="text" class="sf-input"
+                               data-i18n-ph="cam.url.ph" placeholder="rtsp:// or http://">
                     </div>
 
                     <div class="flex gap-2">
-                        <button id="btn-start-camera"
-                                class="sf-btn sf-btn-primary flex-1">
-                            <i class="fas fa-play"></i> Start
+                        <button id="btn-start-camera" class="sf-btn sf-btn-primary flex-1">
+                            <i class="fas fa-play"></i>
+                            <span data-i18n="cam.start">Start</span>
                         </button>
-                        <button id="btn-stop-camera"
-                                class="sf-btn sf-btn-ghost flex-1" disabled>
-                            <i class="fas fa-stop"></i> Stop
+                        <button id="btn-stop-camera" class="sf-btn sf-btn-ghost flex-1" disabled>
+                            <i class="fas fa-stop"></i>
+                            <span data-i18n="cam.stop">Stop</span>
                         </button>
                     </div>
                 </div>
@@ -735,15 +767,15 @@
             <div class="sf-card">
                 <div class="sf-card-header">
                     <i class="fas fa-conveyor-belt"></i>
-                    Conveyor System
+                    <span data-i18n="conv.title">Conveyor System</span>
                 </div>
                 <div class="sf-card-body flex flex-col gap-3">
                     <div>
-                        <label class="sf-label">Select Conveyor</label>
+                        <label class="sf-label" data-i18n="conv.select">Select Conveyor</label>
                         <div class="relative">
                             <select id="conveyor-select" class="sf-select">
-                                <option value="0_SmartConvey2025">Conveyor 0</option>
-                                <option value="1_SmartConvey2025">Conveyor 1</option>
+                                <option value="0_SmartConvey2025" data-i18n="conv.0">Conveyor 0</option>
+                                <option value="1_SmartConvey2025" data-i18n="conv.1">Conveyor 1</option>
                             </select>
                             <i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
                                style="color:var(--fg-subtle); font-size:0.62rem;"></i>
@@ -752,11 +784,11 @@
 
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="sf-label">Conveyor 0</label>
+                            <label class="sf-label" data-i18n="conv.0">Conveyor 0</label>
                             <div id="status-0_SmartConvey2025" class="conveyor-status-cell">--</div>
                         </div>
                         <div>
-                            <label class="sf-label">Conveyor 1</label>
+                            <label class="sf-label" data-i18n="conv.1">Conveyor 1</label>
                             <div id="status-1_SmartConvey2025" class="conveyor-status-cell">--</div>
                         </div>
                     </div>
@@ -767,13 +799,13 @@
             <div class="sf-card">
                 <div class="sf-card-header">
                     <i class="fas fa-crosshairs"></i>
-                    Detected Objects
+                    <span data-i18n="det.title">Detected Objects</span>
                     <span id="detection-count"
                           class="ml-auto text-xs font-bold px-2 py-0.5 rounded-full count-badge">0</span>
                 </div>
                 <div class="p-0">
                     <ul id="detected-list" class="overflow-y-auto px-3 py-2" style="max-height:130px;">
-                        <li class="sf-placeholder sf-empty">No objects detected</li>
+                        <li class="sf-placeholder sf-empty" data-i18n="det.empty">No objects detected</li>
                     </ul>
                 </div>
             </div>
@@ -782,7 +814,7 @@
             <div class="sf-card">
                 <div class="sf-card-header">
                     <i class="fas fa-palette"></i>
-                    Color Configuration
+                    <span data-i18n="color.title">Color Configuration</span>
                 </div>
                 <div class="p-0">
                     <div class="overflow-y-auto overflow-x-auto" style="max-height:155px;">
@@ -790,27 +822,33 @@
                             <thead class="sticky top-0 z-10" style="background:var(--bg-subtle);">
                                 <tr style="border-bottom:1px solid var(--border);">
                                     <th class="text-left px-3 py-2 font-semibold uppercase tracking-wider"
-                                        style="color:var(--fg-muted);">Color</th>
+                                        style="color:var(--fg-muted);"
+                                        data-i18n="color.col">Color</th>
                                     <th class="text-left px-3 py-2 font-semibold uppercase tracking-wider"
-                                        style="color:var(--fg-muted);">Action</th>
+                                        style="color:var(--fg-muted);"
+                                        data-i18n="color.action">Action</th>
                                     <th class="text-left px-3 py-2 font-semibold uppercase tracking-wider"
-                                        style="color:var(--fg-muted);">ms</th>
+                                        style="color:var(--fg-muted);"
+                                        data-i18n="color.ms">ms</th>
                                     <th class="px-3 py-2"></th>
                                 </tr>
                             </thead>
                             <tbody id="color-table-body">
                                 <tr>
-                                    <td colspan="4" class="px-3 py-4 text-center sf-empty">Loading...</td>
+                                    <td colspan="4" class="px-3 py-4 text-center sf-empty"
+                                        data-i18n="color.loading">Loading...</td>
                                 </tr>
                             </tbody>
                         </table>
                     </div>
                     <div class="flex gap-2 p-3" style="border-top:1px solid var(--border);">
                         <button id="btn-add-color" class="sf-btn sf-btn-ghost sf-btn-sm flex-1">
-                            <i class="fas fa-plus"></i> Add
+                            <i class="fas fa-plus"></i>
+                            <span data-i18n="color.add">Add</span>
                         </button>
                         <button id="btn-save-color" class="sf-btn sf-btn-primary sf-btn-sm flex-1">
-                            <i class="fas fa-floppy-disk"></i> Save
+                            <i class="fas fa-floppy-disk"></i>
+                            <span data-i18n="color.save">Save</span>
                         </button>
                     </div>
                 </div>
@@ -820,7 +858,7 @@
             <div class="sf-card">
                 <div class="sf-card-header">
                     <i class="fas fa-terminal"></i>
-                    MQTT Log
+                    <span data-i18n="mqtt.title">MQTT Log</span>
                     <button id="btn-clear-mqtt"
                             class="ml-auto nav-link" style="padding:2px 6px; font-size:0.72rem;">
                         <i class="fas fa-trash-can"></i>
@@ -830,7 +868,7 @@
                     <div id="mqtt-log"
                          class="overflow-y-auto px-3 py-2"
                          style="background:var(--bg); max-height:145px;">
-                        <div class="sf-empty">No messages yet...</div>
+                        <div class="sf-empty" data-i18n="mqtt.empty">No messages yet...</div>
                     </div>
                 </div>
             </div>
@@ -843,9 +881,15 @@
     <script>
         /* ── Theme toggle ──────────────────────────────────── */
         function toggleTheme() {
-            const isDark = document.documentElement.classList.toggle('dark');
+            // Apply transition class so ALL elements animate smoothly.
+            // Remove it after the transition completes (200ms) so normal
+            // hover/interactive transitions are not affected by the global override.
+            const root = document.documentElement;
+            root.classList.add('theme-transition');
+            const isDark = root.classList.toggle('dark');
             localStorage.setItem('sf-theme', isDark ? 'dark' : 'light');
             _updateThemeIcon(isDark);
+            setTimeout(() => root.classList.remove('theme-transition'), 250);
         }
 
         function _updateThemeIcon(isDark) {
@@ -854,7 +898,13 @@
             btn.innerHTML = isDark
                 ? '<i class="fas fa-sun"></i>'
                 : '<i class="fas fa-moon"></i>';
-            btn.title = isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+            // Update data-i18n-title so applyI18n() picks the right key next time
+            btn.dataset.i18nTitle = isDark ? 'tip.theme.dark' : 'tip.theme.light';
+            // Apply current translation immediately (i18n module may not be loaded yet)
+            try {
+                const mod = window.__sf_i18n_t;
+                btn.title = mod ? mod(btn.dataset.i18nTitle) : btn.dataset.i18nTitle;
+            } catch (_) {}
         }
 
         /* Set correct icon on page load */

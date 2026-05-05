@@ -11,11 +11,6 @@ const pingIntervals = {};
 export async function pingConveyor(user) {
     setConveyorStatus(user, "PING...");
 
-    // Update workflow: Step 4 active
-    if (window.updateWorkflowStep) {
-        window.updateWorkflowStep(4);
-    }
-
     await sendMQTT(buildFeedTopic(user, CMD_FEED), JSON.stringify({ action: "PING" }));
 
     let timeout = false;
@@ -23,11 +18,6 @@ export async function pingConveyor(user) {
         timeout = true;
         setConveyorStatus(user, "TIMEOUT");
         clearInterval(pingIntervals[user]);
-
-        // Update workflow: Step 4 failed
-        if (window.updateWorkflowStep) {
-            window.updateWorkflowStep(4, false);
-        }
     }, 5000);
 
     pingIntervals[user] = setInterval(async () => {
@@ -36,18 +26,12 @@ export async function pingConveyor(user) {
         const msg = await pollMQTTMessages(buildFeedTopic(user, STATUS_FEED));
         if (!msg) return;
 
-        // Convert msg to string for processing
         const text = typeof msg === "string" ? msg : JSON.stringify(msg);
 
         if (text.includes("READY")) {
             clearTimeout(timeoutId);
             clearInterval(pingIntervals[user]);
             setConveyorStatus(user, "READY");
-
-            // Update workflow: Step 4 completed
-            if (window.updateWorkflowStep) {
-                window.updateWorkflowStep(4, true);
-            }
         }
 
         if (text.includes("DONE")) {

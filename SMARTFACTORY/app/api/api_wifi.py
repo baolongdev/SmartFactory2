@@ -31,6 +31,9 @@ Usage:
 from flask import Blueprint, jsonify, request
 import subprocess
 import platform
+import threading
+import time
+import re as _re
 import os
 
 import structlog
@@ -45,6 +48,70 @@ api_wifi = Blueprint("wifi", __name__, url_prefix="/api/wifi")
 
 # API key from environment (if set, enables authentication)
 API_KEY = os.environ.get("API_KEY")
+
+
+# ---------------------------------------------------------------------------
+# Linux helpers
+# ---------------------------------------------------------------------------
+_IP_FILE = "/tmp/sf-wifi-ip"
+_AP_CON_NAME = "sf-fallback-ap"
+
+
+def _get_linux_ip(iface: str) -> "str | None":
+    """Return IPv4 address of *iface*, or None."""
+    try:
+        out = subprocess.run(
+            ["ip", "-4", "addr", "show", iface],
+            capture_output=True, text=True, timeout=5
+        ).stdout
+        m = _re.search(r"inet (\d+\.\d+\.\d+\.\d+)", out)
+        if m:
+            ip = m.group(1)
+            # Skip the AP gateway address (NetworkManager assigns 10.42.0.1)
+            return None if ip.startswith("10.42.") else ip
+    except Exception:
+        pass
+    return None
+
+
+def _is_ap_active() -> bool:
+    """Return True when the sf-fallback-ap hotspot connection is up."""
+    try:
+        out = subprocess.run(
+            ["nmcli", "-t", "connection", "show", "--active"],
+            capture_output=True, text=True, timeout=5
+        ).stdout
+        return _AP_CON_NAME in out
+    except Exception:
+        return False
+
+
+def _linux_connect_bg(ssid: str, password: str, secure: bool) -> None:
+    """Background thread: connect to WiFi, then write new IP to /tmp/sf-wifi-ip."""
+    try:
+        cmd = ["nmcli", "dev", "wifi", "connect", ssid]
+        if secure and password:
+            cmd += ["password", password]
+
+        subprocess.run(cmd, check=True, timeout=45)
+        logger.info("wifi_connect_bg_done", ssid=ssid)
+
+        # Poll until wlan0 / eth0 gets a non-AP address (up to 30 s)
+        for _ in range(15):
+            time.sleep(2)
+            ip = _get_linux_ip("wlan0") or _get_linux_ip("eth0")
+            if ip:
+                try:
+                    with open(_IP_FILE, "w") as f:
+                        f.write(ip)
+                except OSError:
+                    pass
+                logger.info("wifi_connect_bg_ip", ssid=ssid, ip=ip)
+                return
+
+        logger.warning("wifi_connect_bg_no_ip", ssid=ssid)
+    except Exception:
+        logger.exception("wifi_connect_bg_failed", ssid=ssid)
 
 
 # ---------------------------------------------------------------------------
@@ -142,6 +209,51 @@ def api_status():
 
 
 # ---------------------------------------------------------------------------
+# GET /api/wifi/ip
+# ---------------------------------------------------------------------------
+@api_wifi.get("/ip")
+def api_ip():
+    """
+    Return the current device IP address and AP status.
+
+    Returns:
+        {
+            "status": "success",
+            "ip": string|null,        # current wlan0 / eth0 IP
+            "ap_active": bool,        # true when fallback hotspot is running
+            "new_ip": string|null     # last IP written by the fallback daemon
+                                      # (/tmp/sf-wifi-ip) after AP shutdown
+        }
+
+    Notes:
+        - Linux only (returns null IP on other platforms)
+        - Useful for polling after a WiFi connect request to discover
+          the new device IP once the AP shuts down
+    """
+    os_name = platform.system().lower()
+    if "linux" not in os_name:
+        return jsonify({"status": "success", "ip": None, "ap_active": False, "new_ip": None})
+
+    ip = _get_linux_ip("wlan0") or _get_linux_ip("eth0")
+    ap_active = _is_ap_active()
+
+    # IP written by daemon after successful AP→WiFi transition
+    new_ip = None
+    try:
+        with open("/tmp/sf-wifi-ip", "r") as f:
+            new_ip = f.read().strip() or None
+    except OSError:
+        pass
+
+    return jsonify({
+        "status": "success",
+        "ip": ip,
+        "ap_active": ap_active,
+        "new_ip": new_ip,
+    })
+
+
+# ---------------------------------------------------------------------------
 # POST /api/wifi/connect
 # ---------------------------------------------------------------------------
 @api_wifi.post("/connect")
@@ -204,17 +316,30 @@ def api_connect():
 
     # ---------------------------------------------------------------------------
     # Linux (Raspberry Pi)
+    # Connect asynchronously so the HTTP response is delivered while the
+    # AP is still up.  The browser can then show an "AP shutting down"
+    # overlay and poll GET /api/wifi/ip for the new device IP.
     # ---------------------------------------------------------------------------
     if "linux" in os_name:
         try:
-            if secure:
-                cmd = ["nmcli", "dev", "wifi", "connect", ssid, "password", password]
-            else:
-                cmd = ["nmcli", "dev", "wifi", "connect", ssid]
+            # Clear any previous IP file so the client knows it's stale
+            try:
+                os.remove(_IP_FILE)
+            except OSError:
+                pass
 
-            subprocess.run(cmd, check=True)
-            logger.info("wifi_connected_linux", ssid=ssid, secure=secure)
-            return jsonify({"success": True})
+            t = threading.Thread(
+                target=_linux_connect_bg,
+                args=(ssid, password, secure),
+                daemon=True,
+            )
+            t.start()
+            logger.info("wifi_connect_queued_linux", ssid=ssid, secure=secure)
+            return jsonify({
+                "success": True,
+                "connecting": True,
+                "message": "Connection initiated. The access point will shut down shortly.",
+            })
 
         except Exception as e:
             logger.exception("wifi_connect_failed_linux", ssid=ssid, error_type=type(e).__name__)

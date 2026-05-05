@@ -20,7 +20,9 @@ class CameraConfig:
             "match_dist": 80
         },
         "drawing": {
-            "show_fps": True
+            "show_fps": True,
+            "overlay_alpha": 0.25,
+            "trajectory_ttl": 3.0
         }
         # Colors are loaded separately via ColorConfig
     }
@@ -48,7 +50,9 @@ class CameraConfig:
 
         # --- DRAWING ---
         draw = cfg.get("drawing", {})
-        self.show_fps = ConfigValidator.require(draw, "show_fps", self.DEFAULT["drawing"]["show_fps"])
+        self.show_fps       = ConfigValidator.require(draw, "show_fps",       self.DEFAULT["drawing"]["show_fps"])
+        self.overlay_alpha  = ConfigValidator.require(draw, "overlay_alpha",  self.DEFAULT["drawing"]["overlay_alpha"])
+        self.trajectory_ttl = ConfigValidator.require(draw, "trajectory_ttl", self.DEFAULT["drawing"]["trajectory_ttl"])
 
         # --- COLORS (always empty here, loaded via ColorConfig) ---
         self.colors = []

@@ -7,14 +7,16 @@
     },
     "detection": {
         "min_contour_area": 1500,
-        "max_detection_fps": 30
+        "max_detection_fps": 20
     },
     "tracker": {
-        "max_lost": 15,
-        "max_history": 20,
+        "max_lost": 2.0,
+        "max_history": 30,
         "match_dist": 80
     },
     "drawing": {
-        "show_fps": true
+        "show_fps": true,
+        "overlay_alpha": 0.25,
+        "trajectory_ttl": 3.0
     }
 }

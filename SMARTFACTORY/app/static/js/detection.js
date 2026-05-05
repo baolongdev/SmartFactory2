@@ -1,8 +1,38 @@
-import { CAMERA_API_BASE, getSelectedUser, buildFeedTopic, CMD_FEED } from "./helpers.js";
+import { CAMERA_API_BASE, PCLS_API_BASE, PCLS_COLOR_CODES, getSelectedUser, buildFeedTopic, CMD_FEED } from "./helpers.js";
 import { sendMQTT } from "./mqtt.js";
 import { cameraRunning } from "./camera_control.js";
+import { t } from "./i18n.js";
 
 let lastActions = {};
+
+// Debounce PCLS calls: don't resend the same color_code within PCLS_COOLDOWN ms
+const PCLS_COOLDOWN = 5000;
+const lastPclsSent = {};
+
+/**
+ * Notify PCLS service for a detected color.
+ * Only fires for colors with a known code (red=1, blue=2, yellow=3).
+ * Debounced per color_code to avoid flooding.
+ * @param {string} colorName - Detected color name (e.g. "red")
+ */
+async function notifyPCLS(colorName) {
+    const colorCode = PCLS_COLOR_CODES[colorName];
+    if (!colorCode) return;                   // color not in PCLS mapping
+
+    const now = Date.now();
+    if (lastPclsSent[colorCode] && now - lastPclsSent[colorCode] < PCLS_COOLDOWN) return;
+    lastPclsSent[colorCode] = now;
+
+    try {
+        await fetch(`${PCLS_API_BASE}/notify`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ color_code: colorCode, color_name: colorName }),
+        });
+    } catch (err) {
+        console.warn("[PCLS] Notify failed:", err);
+    }
+}
 
 /**
  * Poll detections from camera API
@@ -19,30 +49,28 @@ export async function pollDetections() {
 
     // No detections
     if (!data.detections?.length) {
-        list.innerHTML = `<li class="sf-placeholder sf-empty">No objects detected</li>`;
+        list.innerHTML = `<li class="sf-placeholder sf-empty">${t('det.empty')}</li>`;
         return;
-    }
-
-    // Update workflow: Step 2 completed, Step 3 active
-    if (window.updateWorkflowStep) {
-        window.updateWorkflowStep(3, true);
     }
 
     // Render detected objects
     list.innerHTML = data.detections.map(obj => {
         const c = obj.bgr ? `rgb(${obj.bgr[2]},${obj.bgr[1]},${obj.bgr[0]})` : "#888";
+        // tracker_id = unique object ID (from Tracker)
+        // action_id  = conveyor action number (used for MQTT, not for display)
+        const tid = obj.tracker_id ?? "?";
         return `
             <li class="py-1.5 sf-detect-item flex items-center gap-2">
                 <span class="color-dot" style="background:${c}"></span>
                 <span class="sf-detect-name">${obj.name}</span>
                 <span class="sf-detect-meta ml-auto">
-                    ID:${obj.action_id} &middot; ${obj.duration_ms}ms
+                    #${tid} &middot; ${obj.duration_ms}ms
                 </span>
             </li>
         `;
     }).join("");
 
-    // Send MQTT commands based on detections
+    // Send MQTT commands + PCLS notifications based on detections
     const user = getSelectedUser();
     const now = Date.now();
 
@@ -67,5 +95,8 @@ export async function pollDetections() {
 
             lastActions[key] = now;
         }
+
+        // Notify PCLS for recognised colors (red/blue/yellow), debounced
+        notifyPCLS(obj.name);
     }
 }

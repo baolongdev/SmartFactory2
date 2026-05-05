@@ -6,33 +6,16 @@ import { pollDetections } from "./detection.js";
 import {
     renderColorTable,
     saveColorConfig,
-    addNewColorRow
+    addNewColorRow,
+    getColorHex,
 } from "./colors.js";
 import { pingConveyor } from "./conveyor.js";
+import { applyI18n, setLang, t } from "./i18n.js";
 
-// ======================== WORKFLOW STEP MANAGEMENT ===========================
-// Exposed on window so camera_control.js can call it
-window.updateWorkflowStep = function (stepNumber, completed = null) {
-    for (let i = 1; i <= 4; i++) {
-        const step = document.getElementById(`step-${i}`);
-        if (step) step.classList.remove("active", "completed");
-    }
-    if (completed === null) return;
-    if (completed) {
-        for (let i = 1; i < stepNumber; i++) {
-            const step = document.getElementById(`step-${i}`);
-            if (step) step.classList.add("completed");
-        }
-    }
-    const currentStep = document.getElementById(`step-${stepNumber}`);
-    if (currentStep) currentStep.classList.add(completed ? "completed" : "active");
-};
+// Expose t() so the inline theme toggle script can resolve i18n titles
+window.__sf_i18n_t = t;
 
-// ======================== COLOR HEX MAP ===========================
-const _colorHexMap = {
-    red:    "#dc2626", green:  "#16a34a", blue:   "#2563eb",
-    yellow: "#ca8a04", orange: "#ea580c", purple: "#9333ea", pink: "#db2777"
-};
+// (Color hex map lives in colors.js — imported as getColorHex above)
 
 // ======================== TOAST ===========================
 // Exposed on window so colors.js can call showToast()
@@ -90,7 +73,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         ?.addEventListener('change', e => {
             if (e.target.classList.contains('color-name')) {
                 const dot = e.target.closest('tr')?.querySelector('.color-dot');
-                if (dot) dot.style.background = _colorHexMap[e.target.value] || '#6b7280';
+                if (dot) dot.style.background = getColorHex(e.target.value);
             }
         });
 
@@ -98,27 +81,55 @@ document.addEventListener("DOMContentLoaded", async () => {
     document.getElementById('btn-clear-mqtt')
         ?.addEventListener('click', () => {
             const box = document.getElementById("mqtt-log");
-            if (box) box.innerHTML = `<div class="sf-empty">No messages yet...</div>`;
+            if (box) box.innerHTML = `<div class="sf-empty">${t('mqtt.empty')}</div>`;
         });
 
-    // ── Camera init ───────────────────────────────────────────────────────
-    window.updateWorkflowStep(1);
+    // Language switcher
+    document.getElementById('lang-select')
+        ?.addEventListener('change', e => setLang(e.target.value));
+
+    // When language changes: re-render all i18n elements + dynamic JS-injected text
+    window.addEventListener('sf-lang-change', () => {
+        applyI18n();
+        // Camera placeholder (managed by MutationObserver — only update if visible)
+        const ph = document.getElementById('no-camera-placeholder');
+        if (ph && ph.style.display !== 'none') {
+            const ptitle = ph.querySelector('[data-i18n="cam.ph.title"]');
+            const psub   = ph.querySelector('[data-i18n="cam.ph.sub"]');
+            if (ptitle) ptitle.textContent = t('cam.ph.title');
+            if (psub)   psub.textContent   = t('cam.ph.sub');
+        }
+        // MQTT log empty state (only if it shows the empty message)
+        const mqttLog = document.getElementById('mqtt-log');
+        const emptyDiv = mqttLog?.querySelector('.sf-empty');
+        if (emptyDiv) emptyDiv.textContent = t('mqtt.empty');
+        // Detection empty state
+        const detList = document.getElementById('detected-list');
+        const detEmpty = detList?.querySelector('.sf-placeholder');
+        if (detEmpty) detEmpty.textContent = t('det.empty');
+        // Re-render color table (loading/empty text)
+        renderColorTable();
+    });
+
+    // Apply translations immediately on load
+    applyI18n();
+
+    // ── Secondary systems — always init regardless of camera state ───────
+    // Running these first means USB list, colors and MQTT are ready even
+    // if the camera fails to start, so the user doesn't need a full reload.
+    await loadUSBCameras();
+    pollMQTTStatus();
+    await renderColorTable();
+    setInterval(pollMQTTStatus, 5000);
+
+    // ── Camera auto-start ─────────────────────────────────────────────────
     switchCameraType();
 
     const ok = await startCamera();
     if (!ok) {
-        console.warn("Camera failed → skip polling");
+        console.warn("Camera failed → detection polling disabled");
         return;
     }
 
-    await loadUSBCameras();
-
-    window.updateWorkflowStep(2, true);
-
-    // ── Services ──────────────────────────────────────────────────────────
-    pollMQTTStatus();
-    await renderColorTable();
-
-    setInterval(pollMQTTStatus, 5000);
     setInterval(pollDetections, 1000);
 });

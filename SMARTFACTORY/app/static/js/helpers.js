@@ -2,8 +2,12 @@
 
 // API BASES
 export const CAMERA_API_BASE = "/api/camera";
-export const MQTT_API_BASE = "/api/mqtt";
-export const COLOR_API_BASE = "/api/colors";   // <<--- THÊM MỚI
+export const MQTT_API_BASE   = "/api/mqtt";
+export const COLOR_API_BASE  = "/api/colors";
+export const PCLS_API_BASE   = "/api/pcls";
+
+// PCLS color code map (red=1, blue=2, yellow=3)
+export const PCLS_COLOR_CODES = { red: 1, blue: 2, yellow: 3 };
 
 // MQTT FEEDS (phù hợp config_mqtt.json)
 export const CMD_FEED = "V1";

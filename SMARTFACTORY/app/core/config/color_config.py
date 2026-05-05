@@ -83,21 +83,26 @@ class ColorConfig:
         self.colors = self._fill_missing_fields(self._load_colors())
 
 
-    # 🔥 Tự động bổ sung HSV/BGR/action/duration theo name
     def _fill_missing_fields(self, list_in):
+        """
+        Merge user config with defaults.
+        User values always win; defaults fill only missing fields.
+        This allows tuning HSV thresholds and BGR display colour
+        directly from colors.json without touching code.
+        """
         output = []
         for item in list_in:
             base = next((d for d in self.DEFAULT if d["name"] == item["name"]), None)
             if not base:
                 continue
-            
+
             merged = {
-                "name": item["name"],
-                "bgr": base["bgr"],
-                "lower": base["lower"],
-                "upper": base["upper"],
-                "action_id": item.get("action_id", base["action_id"]),
-                "duration_ms": item.get("duration_ms", base["duration_ms"])
+                "name":        item["name"],
+                "bgr":         item.get("bgr",         base["bgr"]),
+                "lower":       item.get("lower",       base["lower"]),
+                "upper":       item.get("upper",       base["upper"]),
+                "action_id":   item.get("action_id",   base["action_id"]),
+                "duration_ms": item.get("duration_ms", base["duration_ms"]),
             }
             output.append(merged)
         return output

@@ -1,4 +1,5 @@
 import { CAMERA_API_BASE } from "./helpers.js";
+import { t } from "./i18n.js";
 
 export let cameraRunning = false;
 
@@ -31,10 +32,12 @@ export async function startCamera() {
     cameraRunning = false;
     setCameraUI(false);
 
-    // Update workflow: Step 1 active
-    if (window.updateWorkflowStep) {
-        window.updateWorkflowStep(1);
-    }
+    // Always clear the img element before a new connection attempt.
+    // If the previous attempt left src pointing to a failed URL, the
+    // browser may cache the error and refuse to reload the same URL
+    // without this explicit reset.
+    videoEl.src = "";
+    videoEl.style.display = "none";
 
     const camType = document.getElementById('camera-type').value;
     const usbIndex = parseInt(document.getElementById('usb-camera').value, 10);
@@ -77,12 +80,7 @@ export async function startCamera() {
         videoEl.src = `${CAMERA_API_BASE}/stream`;
         videoEl.style.display = "block";
 
-        // Update workflow: Step 1 completed, Step 2 active
-        if (window.updateWorkflowStep) {
-            window.updateWorkflowStep(2, true);
-        }
-
-        updateCameraStatus(true, "Camera Running");
+        updateCameraStatus(true, t('status.running'));
         return true;
     }
 
@@ -92,7 +90,7 @@ export async function startCamera() {
     videoEl.src = "";
     videoEl.style.display = "none";
 
-    updateCameraStatus(false, "Camera Error");
+    updateCameraStatus(false, t('status.error'));
     return false;
 }
 
@@ -119,12 +117,7 @@ export async function stopCamera() {
 
     list.innerHTML = `<li class="sf-placeholder sf-empty">No objects detected</li>`;
 
-    updateCameraStatus(false, "Camera Stopped");
-
-    // Reset workflow steps
-    if (window.updateWorkflowStep) {
-        window.updateWorkflowStep(1, null);
-    }
+    updateCameraStatus(false, t('status.stopped'));
 }
 
 /**

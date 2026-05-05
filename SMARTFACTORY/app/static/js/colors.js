@@ -1,4 +1,5 @@
 import { COLOR_API_BASE } from "./helpers.js";
+import { t } from "./i18n.js";
 
 /* ============================================================
    LOAD CONFIG
@@ -32,19 +33,20 @@ export async function saveColorConfigToServer(colors) {
 }
 
 /* ============================================================
-   COLOR HEX LOOKUP
+   COLOR HEX LOOKUP  (single source of truth — imported by app.js)
    ============================================================ */
-function getColorHex(name) {
-    const hexMap = {
-        red:    "#dc2626",
-        green:  "#16a34a",
-        blue:   "#2563eb",
-        yellow: "#ca8a04",
-        orange: "#ea580c",
-        purple: "#9333ea",
-        pink:   "#db2777"
-    };
-    return hexMap[name] || "#6b7280";
+export const COLOR_HEX_MAP = {
+    red:    "#dc2626",
+    green:  "#16a34a",
+    blue:   "#2563eb",
+    yellow: "#ca8a04",
+    orange: "#ea580c",
+    purple: "#9333ea",
+    pink:   "#db2777",
+};
+
+export function getColorHex(name) {
+    return COLOR_HEX_MAP[name] || "#6b7280";
 }
 
 /* ============================================================
@@ -98,7 +100,7 @@ export async function renderColorTable() {
     const list = await loadColorConfig();
 
     if (!list.length) {
-        table.innerHTML = `<tr><td colspan="4" class="px-3 py-4 text-center sf-empty">No colors configured</td></tr>`;
+        table.innerHTML = `<tr><td colspan="4" class="px-3 py-4 text-center sf-empty">${t('color.empty')}</td></tr>`;
         return;
     }
 
@@ -127,9 +129,9 @@ export async function saveColorConfig() {
     const res = await saveColorConfigToServer(colors);
 
     if (res.status === "success") {
-        showToast("Color config saved", "success");
+        showToast(t('toast.color.saved'), "success");
     } else {
-        showToast("Save failed!", "error");
+        showToast(t('toast.color.fail'), "error");
     }
 }
 

@@ -1,71 +1,108 @@
 import cv2
+import numpy as np
 import logging
-from app.core.camera import ColorObject
+from app.core.camera.color_object import ColorObject
 
 logger = logging.getLogger("ColorDetector")
+
+# Max width for the detection frame.
+# Frame is downscaled to this width before HSV processing.
+# Fewer pixels = cheaper inRange/morphology/findContours.
+# 320px is sufficient for conveyor-belt objects (large blobs).
+_MAX_DETECT_W = 320
 
 
 class ColorDetector:
     """
-    Detect objects by color in BGR frame using HSV thresholds.
-    Returns list of (x, y, w, h, ColorObject)
+    HSV-based color detector optimised for real-time pipeline use.
+
+    Optimisations vs. original:
+    ─────────────────────────────────────────────────────────────────
+    1. Pre-computed morphology kernel (class-level, not per-frame).
+    2. Downscale frame to ≤320 px wide before ALL processing.
+    3. Single GaussianBlur + single BGR→HSV conversion per frame
+       (original did medianBlur per colour inside the loop).
+    4. MORPH_OPEN (noise removal) + MORPH_CLOSE (merge nearby fragments).
+    5. min_area scaled to detection resolution automatically.
+    6. Bounding-box coordinates upscaled back to original resolution.
     """
 
-    def __init__(self, color_objects, min_area=1500):
-        """
-        color_objects: list[ColorObject]
-        """
+    # Pre-computed once at class level — never reallocated at runtime.
+    _KERNEL       = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
+    # Larger kernel for closing gaps between fragments of the same object.
+    _CLOSE_KERNEL = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (15, 15))
+
+    def __init__(self, color_objects: list, min_area: int = 1500):
         self.color_objects = color_objects
         self.min_area = min_area
-        self.last_detections = []
+        self.last_detections: list = []
 
-    # ----------------------------------------------------------------------
+    # ------------------------------------------------------------------
 
-    def detect(self, frame):
-        """Run HSV-based color detection."""
+    def detect(self, frame) -> list:
+        """Run optimised HSV colour detection. Returns [(x,y,w,h,ColorObject)]."""
         if frame is None:
-            logger.warning("[ColorDetector] Empty frame")
             return []
 
-        hsv = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-        detections = []
+        orig_h, orig_w = frame.shape[:2]
+
+        # ── 1. Downscale frame ──────────────────────────────────────────
+        scale = min(_MAX_DETECT_W / orig_w, 1.0)
+        if scale < 1.0:
+            det_w = int(orig_w * scale)
+            det_h = int(orig_h * scale)
+            small = cv2.resize(frame, (det_w, det_h),
+                               interpolation=cv2.INTER_LINEAR)
+        else:
+            small = frame
+
+        # ── 2. Single blur + HSV — done ONCE for all colours ───────────
+        blurred = cv2.GaussianBlur(small, (5, 5), 0)
+        hsv = cv2.cvtColor(blurred, cv2.COLOR_BGR2HSV)
+
+        # min_area adjusted for detection resolution
+        scaled_min_area = self.min_area * (scale ** 2)
+
+        inv = 1.0 / scale
+        detections: list = []
 
         for obj in self.color_objects:
-            # Create mask based on HSV threshold
-            mask = cv2.inRange(hsv, obj.lower, obj.upper)
-            mask = cv2.medianBlur(mask, 5)
+            # ── 3. Threshold ────────────────────────────────────────────
+            mask = cv2.inRange(hsv,
+                               np.asarray(obj.lower, dtype=np.uint8),
+                               np.asarray(obj.upper, dtype=np.uint8))
 
-            # Morphological ops to remove noise
-            kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (5, 5))
-            mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
-            mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, kernel)
+            # ── 4. OPEN removes noise; CLOSE merges nearby fragments ────
+            mask = cv2.morphologyEx(mask, cv2.MORPH_OPEN,  self._KERNEL)
+            mask = cv2.morphologyEx(mask, cv2.MORPH_CLOSE, self._CLOSE_KERNEL)
 
-            # Find contours
-            contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+            # ── 5. Find contours ────────────────────────────────────────
+            contours, _ = cv2.findContours(
+                mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+            )
 
             for cnt in contours:
-                area = cv2.contourArea(cnt)
-                if area < self.min_area:
+                if cv2.contourArea(cnt) < scaled_min_area:
                     continue
 
-                x, y, w, h = cv2.boundingRect(cnt)
+                sx, sy, sw, sh = cv2.boundingRect(cnt)
 
-                # Copy ColorObject but PRESERVE metadata
-                detected_obj = ColorObject(
+                # ── 6. Scale coords back to original resolution ─────────
+                x = int(sx * inv)
+                y = int(sy * inv)
+                w = int(sw * inv)
+                h = int(sh * inv)
+
+                detected = ColorObject(
                     name=obj.name,
                     lower=obj.lower,
                     upper=obj.upper,
                     bgr=obj.bgr,
                     action_id=obj.action_id,
-                    duration_ms=obj.duration_ms
+                    duration_ms=obj.duration_ms,
                 )
-
-                detected_obj.x = x
-                detected_obj.y = y
-                detected_obj.w = w
-                detected_obj.h = h
-
-                detections.append((x, y, w, h, detected_obj))
+                detected.x, detected.y, detected.w, detected.h = x, y, w, h
+                detections.append((x, y, w, h, detected))
 
         self.last_detections = detections
         return detections
