@@ -1,11 +1,11 @@
 """
 UART API Blueprint - REST endpoints for serial communication.
 
-Endpoints:
-----------
-- POST /api/uart/send   : Send JSON command to device via UART
-- GET  /api/uart/status : UART connection status
-- GET  /api/uart/read   : Latest data received from device
+Protocol:
+    POST /api/uart/command  {"command": 0}  → dừng băng tải  ("0\n")
+    POST /api/uart/command  {"command": 1}  → chạy băng tải  ("1\n")
+    GET  /api/uart/status                   → trạng thái kết nối
+    GET  /api/uart/read                     → dữ liệu nhận mới nhất từ thiết bị
 """
 
 from flask import Blueprint, jsonify, request
@@ -19,28 +19,33 @@ api_uart = Blueprint("uart", __name__, url_prefix="/api/uart")
 
 
 # ---------------------------------------------------------------------------
-# POST /api/uart/send
+# POST /api/uart/command
 # ---------------------------------------------------------------------------
-@api_uart.post("/send")
-def uart_send():
+@api_uart.post("/command")
+def uart_command():
     """
-    Send a JSON command to the device over UART.
+    Gửi lệnh điều khiển băng tải qua UART.
 
     Request Body:
-        {"action": int, "duration_ms": int}   — conveyor command
-        {"action": "PING"}                     — ping
+        {"command": 1}   — chạy băng tải
+        {"command": 0}   — dừng băng tải
 
     Returns:
-        {"status": "success", "data": {...}}
+        {"status": "success", "command": 0|1}
         {"status": "error",   "message": "..."} (400 / 503)
     """
     data = request.get_json(silent=True) or {}
-    if not data:
-        return jsonify({"status": "error", "message": "No data provided"}), 400
+    command = data.get("command")
 
-    ok = uart_service.send(data)
+    if command not in (0, 1):
+        return jsonify({
+            "status":  "error",
+            "message": "command must be 0 (stop) or 1 (run)"
+        }), 400
+
+    ok = uart_service.send_command(command)
     if ok:
-        return jsonify({"status": "success", "data": data})
+        return jsonify({"status": "success", "command": command})
     return jsonify({"status": "error", "message": "UART not connected"}), 503
 
 
@@ -49,7 +54,7 @@ def uart_send():
 # ---------------------------------------------------------------------------
 @api_uart.get("/status")
 def uart_status():
-    """Return UART connection status."""
+    """Trạng thái kết nối UART."""
     return jsonify({"status": "success", "data": uart_service.status()})
 
 
@@ -58,5 +63,5 @@ def uart_status():
 # ---------------------------------------------------------------------------
 @api_uart.get("/read")
 def uart_read():
-    """Return the latest data received from the device (or null)."""
+    """Dữ liệu mới nhất nhận từ thiết bị (hoặc null)."""
     return jsonify({"status": "success", "data": uart_service.get_last_received()})

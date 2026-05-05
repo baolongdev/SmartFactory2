@@ -3,24 +3,24 @@ import { sendUART } from "./uart.js";
 import { cameraRunning } from "./camera_control.js";
 import { t } from "./i18n.js";
 
-let lastActions = {};
+// ── Conveyor state ─────────────────────────────────────────────────────────
+// Chỉ gửi UART khi trạng thái thay đổi (tránh spam 0/1 liên tục).
+let conveyorRunning = false;   // băng tải đang chạy?
+let stopTimer       = null;    // timer gửi "0" sau duration_ms
 
-// Debounce PCLS calls per color_code
+// ── PCLS debounce ──────────────────────────────────────────────────────────
 const PCLS_COOLDOWN = 5000;
-const lastPclsSent = {};
+const lastPclsSent  = {};
 
 /**
- * Notify PCLS service for a detected color (red/blue/yellow only), debounced.
- * @param {string} colorName
+ * Notify PCLS service cho màu phát hiện (red/blue/yellow), debounced 5s.
  */
 async function notifyPCLS(colorName) {
     const colorCode = PCLS_COLOR_CODES[colorName];
     if (!colorCode) return;
-
     const now = Date.now();
     if (lastPclsSent[colorCode] && now - lastPclsSent[colorCode] < PCLS_COOLDOWN) return;
     lastPclsSent[colorCode] = now;
-
     try {
         await fetch(`${PCLS_API_BASE}/notify`, {
             method: "POST",
@@ -33,8 +33,13 @@ async function notifyPCLS(colorName) {
 }
 
 /**
- * Poll detections from camera API and send UART commands.
- * Updates the detected-objects list in the UI.
+ * Poll detections và điều khiển băng tải qua UART.
+ *
+ * Logic băng tải:
+ *   - Phát hiện vật thể → gửi 1 (chạy băng tải)
+ *   - Reset timer: sau duration_ms kể từ lần detect cuối → gửi 0 (dừng)
+ *   - Không phát hiện → để timer tự chạy, không gửi 0 ngay lập tức
+ *     (tránh giật khi object thoáng mất 1 frame)
  */
 export async function pollDetections() {
     if (!cameraRunning) return;
@@ -45,14 +50,15 @@ export async function pollDetections() {
     const data = await res.json();
     const list = document.getElementById("detected-list");
 
+    // ── Render danh sách vật thể ───────────────────────────────────────────
     if (!data.detections?.length) {
         list.innerHTML = `<li class="sf-placeholder sf-empty">${t('det.empty')}</li>`;
+        // Không gửi 0 ngay — để timer xử lý để tránh giật
         return;
     }
 
-    // Render detected objects
     list.innerHTML = data.detections.map(obj => {
-        const c = obj.bgr ? `rgb(${obj.bgr[2]},${obj.bgr[1]},${obj.bgr[0]})` : "#888";
+        const c   = obj.bgr ? `rgb(${obj.bgr[2]},${obj.bgr[1]},${obj.bgr[0]})` : "#888";
         const tid = obj.tracker_id ?? "?";
         return `
             <li class="py-1.5 sf-detect-item flex items-center gap-2">
@@ -65,20 +71,25 @@ export async function pollDetections() {
         `;
     }).join("");
 
-    // Send UART commands based on detections
-    const now = Date.now();
-    for (const obj of data.detections) {
-        const action   = obj.action_id;
-        const duration = obj.duration_ms;
-        if (!action || !duration) continue;
+    // ── Điều khiển băng tải ────────────────────────────────────────────────
+    // Dùng object đầu tiên (max_objects=1 nên chỉ có 1)
+    const obj      = data.detections[0];
+    const duration = obj.duration_ms;
 
-        // Debounce: avoid sending duplicate commands within duration + 500ms
-        if (!lastActions[action] || now - lastActions[action] > duration + 500) {
-            await sendUART({ action, duration_ms: duration });
-            lastActions[action] = now;
-        }
-
-        // Notify PCLS for red/blue/yellow (debounced)
-        notifyPCLS(obj.name);
+    // Gửi 1 nếu băng tải chưa chạy
+    if (!conveyorRunning) {
+        await sendUART(1);
+        conveyorRunning = true;
     }
+
+    // Reset timer dừng — mỗi lần detect thành công kéo dài thêm duration_ms
+    if (stopTimer) clearTimeout(stopTimer);
+    stopTimer = setTimeout(async () => {
+        await sendUART(0);
+        conveyorRunning = false;
+        stopTimer = null;
+    }, duration);
+
+    // ── PCLS notify ────────────────────────────────────────────────────────
+    notifyPCLS(obj.name);
 }

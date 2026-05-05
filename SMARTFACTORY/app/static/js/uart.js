@@ -1,16 +1,16 @@
 import { UART_API_BASE } from "./helpers.js";
 
 /**
- * Send a JSON command to the device via UART (through Flask backend).
- * @param {Object} data - e.g. {action: 1, duration_ms: 4000}
+ * Gửi lệnh băng tải qua UART.
+ * @param {0|1} command  — 0: dừng, 1: chạy
  */
-export async function sendUART(data) {
-    appendUARTLog(`→ ${JSON.stringify(data)}`);
+export async function sendUART(command) {
+    appendUARTLog(`→ ${command === 1 ? "1 (RUN)" : "0 (STOP)"}`);
     try {
-        await fetch(`${UART_API_BASE}/send`, {
+        await fetch(`${UART_API_BASE}/command`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
+            body: JSON.stringify({ command }),
         });
     } catch (err) {
         console.warn("[UART] Send failed:", err);
@@ -18,20 +18,18 @@ export async function sendUART(data) {
 }
 
 /**
- * Poll UART connection status.
- * Updates the #uart-status indicator in the header.
+ * Poll UART connection status, cập nhật indicator #uart-status.
  */
 export async function pollUARTStatus() {
     try {
         const res = await fetch(`${UART_API_BASE}/status`);
         if (!res.ok) return;
-        const data = await res.json();
+        const { data } = await res.json();
         const el = document.getElementById("uart-status");
         if (!el) return;
-        const d = data.data;
-        if (d.connected) {
+        if (data.connected) {
             el.className = "status-indicator status-online";
-            el.innerHTML = `<span class="dot-pulse"></span><span>UART ${d.port}</span>`;
+            el.innerHTML = `<span class="dot-pulse"></span><span>UART ${data.port}</span>`;
         } else {
             el.className = "status-indicator status-offline";
             el.innerHTML = `<span class="dot-pulse"></span><span>UART Offline</span>`;
@@ -40,39 +38,34 @@ export async function pollUARTStatus() {
 }
 
 /**
- * Read the latest data received from the device.
- * Appends to log if data is non-null.
- * @returns {Object|string|null}
+ * Đọc dữ liệu mới nhất nhận từ thiết bị.
+ * @returns {any|null}
  */
 export async function readUART() {
     try {
         const res = await fetch(`${UART_API_BASE}/read`);
         if (!res.ok) return null;
-        const data = await res.json();
-        if (data.data != null) appendUARTLog(`← ${JSON.stringify(data.data)}`);
-        return data.data;
+        const { data } = await res.json();
+        if (data != null) appendUARTLog(`← ${JSON.stringify(data)}`);
+        return data;
     } catch (_) {
         return null;
     }
 }
 
 /**
- * Append a line to the UART log panel (#uart-log).
+ * Ghi log vào panel #uart-log.
  * @param {string} text
  */
 export function appendUARTLog(text) {
     const box = document.getElementById("uart-log");
     if (!box) return;
-
     const placeholder = box.querySelector(".sf-empty");
     if (placeholder) placeholder.remove();
-
     const time = new Date().toLocaleTimeString();
     const entry = document.createElement("div");
     entry.className = "py-1 sf-log-entry font-mono";
     entry.innerHTML = `<span class="sf-log-time">[${time}]</span> <span class="sf-log-text">${text}</span>`;
     box.insertBefore(entry, box.firstChild);
-
-    // Keep at most 100 entries
     while (box.children.length > 100) box.removeChild(box.lastChild);
 }

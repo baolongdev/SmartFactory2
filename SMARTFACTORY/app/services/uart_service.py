@@ -88,24 +88,28 @@ class UARTService:
 
     # ── TX ───────────────────────────────────────────────────────────────────
 
-    def send(self, data: dict) -> bool:
+    def send_command(self, command: int) -> bool:
         """
-        Send a dict as a JSON line to the device.
+        Send a conveyor command over UART.
+
+        Protocol: one ASCII character + newline
+            "0\\n"  →  dừng băng tải (stop)
+            "1\\n"  →  chạy băng tải (run)
 
         Args:
-            data: dict to serialise, e.g. {"action": 1, "duration_ms": 4000}
+            command: 0 (stop) or 1 (run)
 
         Returns:
             True if written successfully, False if not connected or error.
         """
         if not self.connected or not self.ser:
-            logger.warning("uart_send_skipped_not_connected", data=data)
+            logger.warning("uart_send_skipped_not_connected", command=command)
             return False
         try:
-            line = json.dumps(data, separators=(",", ":")) + "\n"
+            line = f"{command}\n"
             with self._write_lock:
                 self.ser.write(line.encode("utf-8"))
-            logger.info("uart_sent", data=data)
+            logger.info("uart_sent", command=command)
             return True
         except Exception as e:
             logger.error("uart_send_failed", error=str(e))
