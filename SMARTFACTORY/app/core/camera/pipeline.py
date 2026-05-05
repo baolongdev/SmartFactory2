@@ -183,8 +183,15 @@ class CameraPipeline:
                     detections, key=lambda d: d[2] * d[3], reverse=True
                 )[:self.max_objects]
 
-            boxes      = [(x, y, w, h) for x, y, w, h, _ in detections]
-            tracked    = self.tracker.update(boxes)
+            boxes   = [(x, y, w, h) for x, y, w, h, _ in detections]
+            tracked = self.tracker.update(boxes)
+
+            # Enforce max_objects limit on tracker state.
+            # Without this, old tracked objects coast for up to max_lost
+            # seconds and DrawManager still renders them as ghost objects.
+            if self.max_objects:
+                self.tracker.trim(self.max_objects)
+                tracked = [t for t in tracked if not t[2]]  # drop coasting
 
             # ── Publish latest result for encoder ─────────────────────────
             with self._pending_lock:

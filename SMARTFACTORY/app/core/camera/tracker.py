@@ -146,6 +146,36 @@ class Tracker:
 
         return result
 
+    # ── Hard limit ───────────────────────────────────────────────────────────
+
+    def trim(self, max_keep: int) -> None:
+        """
+        Enforce a hard object-count limit after update().
+
+        1. Evict all coasting objects immediately (no more ghost trails).
+        2. If still more than max_keep active objects, keep only the ones
+           tracked the longest (highest frame count = most stable track).
+
+        Call this right after update() when max_objects > 0 so DrawManager
+        never receives more than max_keep entries.
+        """
+        with self.lock:
+            # Step 1 — drop all coasting objects
+            coasting_ids = [oid for oid, obj in self.objects.items()
+                            if obj["coasting"]]
+            for oid in coasting_ids:
+                del self.objects[oid]
+
+            # Step 2 — if still over limit, evict least-stable tracks
+            if len(self.objects) > max_keep:
+                sorted_ids = sorted(
+                    self.objects,
+                    key=lambda oid: self.objects[oid]["frames"],
+                    reverse=True,
+                )
+                for oid in sorted_ids[max_keep:]:
+                    del self.objects[oid]
+
     # ── Trajectory query ──────────────────────────────────────────────────────
 
     def get_trajectory(self, obj_id: str, ttl: float = 3.0) -> list:
