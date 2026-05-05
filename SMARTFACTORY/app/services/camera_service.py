@@ -342,6 +342,38 @@ class CameraService:
         return detections
 
     
+    def get_status(self) -> dict:
+        """
+        Return pipeline status for GET /api/camera/status.
+
+        Includes FPS metrics from both pipeline threads:
+            det_fps  — detection rate (how fast frames are processed)
+            enc_fps  — encode/stream rate (what the browser actually sees)
+        """
+        p = self.pipeline
+        if not p:
+            return {
+                "running":        False,
+                "pipeline_ready": False,
+                "detected":       0,
+                "tracked":        0,
+                "det_fps":        0.0,
+                "enc_fps":        0.0,
+            }
+
+        with p.frame_lock:
+            n_detected = len(p._last_detections)
+            n_tracked  = len([t for t in p._last_tracked if not t[2]])  # non-coasting
+
+        return {
+            "running":        self.running,
+            "pipeline_ready": p._jpeg is not None,
+            "detected":       n_detected,
+            "tracked":        n_tracked,
+            "det_fps":        round(p._det_fps, 1),
+            "enc_fps":        round(p._enc_fps, 1),
+        }
+
     def update_colors(self) -> bool:
         """
         Hot-reload color configuration for running pipeline.
