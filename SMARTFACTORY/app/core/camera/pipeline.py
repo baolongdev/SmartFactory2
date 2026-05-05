@@ -101,15 +101,16 @@ class CameraPipeline:
         self.det_interval = 1.0 / max(config.max_det_fps, 1e-3)
         self.max_objects  = config.max_objects   # 0 = unlimited
 
-        # FPS counters (detection thread measures its own rate)
-        self._det_fps        = 0.0
-        self._det_frame_cnt  = 0
-        self._det_fps_ts     = time.time()
-
-        # FPS counters (encode thread measures stream rate)
-        self._enc_fps        = 0.0
-        self._enc_frame_cnt  = 0
-        self._enc_fps_ts     = time.time()
+        # FPS — Exponential Moving Average, α=0.1 (≈10-frame smoothing window)
+        # Updated once per frame using dt between consecutive frames.
+        # More accurate than a 1-second window counter because:
+        #   • no 1-second display lag
+        #   • measured AFTER processing (not before), so no pre-processing bias
+        #   • first frame initialises rather than distorting the average
+        self._det_fps   = 0.0    # detection thread rate
+        self._enc_fps   = 0.0    # encode/stream thread rate (shown in HUD)
+        self._last_det_t: float = 0.0   # wall time of previous detection frame
+        self._last_enc_t: float = 0.0   # wall time of previous encode frame
 
         # -------------------------------------------------
         # HANDOFF: detection → encoder
@@ -189,13 +190,14 @@ class CameraPipeline:
             with self._pending_lock:
                 self._pending = (frame, detections, tracked)
 
-            # ── Detection FPS counter ─────────────────────────────────────
-            self._det_frame_cnt += 1
-            elapsed = last_det_time - self._det_fps_ts
-            if elapsed >= 1.0:
-                self._det_fps       = self._det_frame_cnt / elapsed
-                self._det_frame_cnt = 0
-                self._det_fps_ts    = last_det_time
+            # ── Detection FPS — EMA (α=0.1) ───────────────────────────────
+            # Measured AFTER all processing so dt reflects true frame cost.
+            t_now = time.time()
+            if self._last_det_t > 0.0:
+                dt = t_now - self._last_det_t
+                if dt > 0.0:
+                    self._det_fps = 0.9 * self._det_fps + 0.1 * (1.0 / dt)
+            self._last_det_t = t_now
 
     # ──────────────────────────────────────────────────────────────────────────
     # Thread 3 — Draw + Encode
@@ -245,14 +247,14 @@ class CameraPipeline:
                 self._last_detections = detections
                 self._last_tracked    = tracked
 
-            # ── Encode (stream) FPS counter ───────────────────────────────
-            now = time.time()
-            self._enc_frame_cnt += 1
-            elapsed = now - self._enc_fps_ts
-            if elapsed >= 1.0:
-                self._enc_fps       = self._enc_frame_cnt / elapsed
-                self._enc_frame_cnt = 0
-                self._enc_fps_ts    = now
+            # ── Encode FPS — EMA (α=0.1) ─────────────────────────────────
+            # Measured after imencode completes → true stream throughput.
+            t_now = time.time()
+            if self._last_enc_t > 0.0:
+                dt = t_now - self._last_enc_t
+                if dt > 0.0:
+                    self._enc_fps = 0.9 * self._enc_fps + 0.1 * (1.0 / dt)
+            self._last_enc_t = t_now
 
     # ──────────────────────────────────────────────────────────────────────────
 
