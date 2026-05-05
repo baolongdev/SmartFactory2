@@ -413,9 +413,18 @@
         #uart-log > div:last-child { border-bottom: none; }
 
         /* JS-injected log helpers */
-        .sf-log-entry { border-bottom: 1px solid var(--border); font-size: 0.67rem; }
-        .sf-log-time  { color: var(--fg-subtle); }
-        .sf-log-text  { color: var(--fg); }
+        .sf-log-entry  { border-bottom: 1px solid var(--border); font-size: 0.67rem; }
+        .sf-log-time   { color: var(--fg-subtle); margin-right: 4px; }
+        .sf-log-arrow  { font-weight: 700; margin-right: 4px; }
+        /* TX arrows */
+        .sf-log-tx .sf-log-arrow { color: var(--primary); }
+        /* RX arrows */
+        .sf-log-rx .sf-log-arrow { color: var(--warning); }
+        /* TX content: RUN=green, STOP=muted */
+        .sf-log-run    { color: var(--success); font-weight: 600; }
+        .sf-log-stop   { color: var(--fg-subtle); }
+        /* RX content */
+        .sf-log-rx .sf-log-text { color: var(--warning); }
 
         /* ═══════════════════════════════════════════════════════
            CONVEYOR STATUS CELL

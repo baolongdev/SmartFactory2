@@ -55,6 +55,10 @@ export async function readUART() {
 
 /**
  * Ghi log vào panel #uart-log.
+ * Tự động phân màu:
+ *   → 1 (RUN)  — mũi tên xanh dương, text xanh lá
+ *   → 0 (STOP) — mũi tên xanh dương, text xám
+ *   ← ...      — mũi tên + text màu vàng (RX từ thiết bị)
  * @param {string} text
  */
 export function appendUARTLog(text) {
@@ -62,10 +66,29 @@ export function appendUARTLog(text) {
     if (!box) return;
     const placeholder = box.querySelector(".sf-empty");
     if (placeholder) placeholder.remove();
+
+    const isTx = text.startsWith("→");
+    const isRx = text.startsWith("←");
+
+    // Tách arrow và phần nội dung
+    const arrow   = text.slice(0, 1);          // "→" hoặc "←"
+    const content = text.slice(2).trim();       // phần còn lại
+
+    // Chọn class cho nội dung TX
+    let contentClass = "sf-log-text";
+    if (isTx) {
+        contentClass = content.includes("RUN") ? "sf-log-run" : "sf-log-stop";
+    }
+
+    const dirClass = isTx ? "sf-log-tx" : isRx ? "sf-log-rx" : "";
     const time = new Date().toLocaleTimeString();
+
     const entry = document.createElement("div");
-    entry.className = "py-1 sf-log-entry font-mono";
-    entry.innerHTML = `<span class="sf-log-time">[${time}]</span> <span class="sf-log-text">${text}</span>`;
+    entry.className = `py-1 sf-log-entry font-mono ${dirClass}`;
+    entry.innerHTML = `<span class="sf-log-time">[${time}]</span>`
+                    + `<span class="sf-log-arrow">${arrow}</span>`
+                    + `<span class="${contentClass}">${content}</span>`;
+
     box.insertBefore(entry, box.firstChild);
     while (box.children.length > 100) box.removeChild(box.lastChild);
 }
