@@ -12,7 +12,8 @@ class CameraConfig:
         },
         "detection": {
             "min_contour_area": 1500,
-            "max_detection_fps": 30
+            "max_detection_fps": 30,
+            "max_objects": 1
         },
         "tracker": {
             "max_lost": 15,
@@ -39,8 +40,9 @@ class CameraConfig:
 
         # --- DETECTION ---
         det = cfg.get("detection", {})
-        self.min_area = ConfigValidator.require(det, "min_contour_area", self.DEFAULT["detection"]["min_contour_area"])
+        self.min_area    = ConfigValidator.require(det, "min_contour_area",  self.DEFAULT["detection"]["min_contour_area"])
         self.max_det_fps = ConfigValidator.require(det, "max_detection_fps", self.DEFAULT["detection"]["max_detection_fps"])
+        self.max_objects = ConfigValidator.require(det, "max_objects",        self.DEFAULT["detection"]["max_objects"])
 
         # --- TRACKER ---
         trk = cfg.get("tracker", {})

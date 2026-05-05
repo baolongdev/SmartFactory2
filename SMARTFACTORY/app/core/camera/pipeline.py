@@ -99,6 +99,7 @@ class CameraPipeline:
         # -------------------------------------------------
         self.running = True
         self.det_interval = 1.0 / max(config.max_det_fps, 1e-3)
+        self.max_objects  = config.max_objects   # 0 = unlimited
 
         # FPS counters (detection thread measures its own rate)
         self._det_fps        = 0.0
@@ -173,6 +174,14 @@ class CameraPipeline:
 
             # ── Detect + Track ────────────────────────────────────────────
             detections = self.detector.detect(frame)
+
+            # Keep only the N largest objects (by bounding-box area).
+            # max_objects=0 means unlimited.
+            if self.max_objects and len(detections) > self.max_objects:
+                detections = sorted(
+                    detections, key=lambda d: d[2] * d[3], reverse=True
+                )[:self.max_objects]
+
             boxes      = [(x, y, w, h) for x, y, w, h, _ in detections]
             tracked    = self.tracker.update(boxes)
 
