@@ -27,7 +27,7 @@ const TRANSLATIONS = {
         "step3.title":      "Theo dõi vật",
         "step3.desc":       "Gán ID đối tượng",
         "step4.title":      "Lệnh băng tải",
-        "step4.desc":       "Gửi MQTT",
+        "step4.desc":       "Gửi UART",
 
         // Camera source card
         "cam.title":        "Nguồn Camera",
@@ -60,9 +60,9 @@ const TRANSLATIONS = {
         "color.loading":    "Đang tải...",
         "color.empty":      "Chưa có màu nào",
 
-        // MQTT log card
-        "mqtt.title":       "Nhật ký MQTT",
-        "mqtt.empty":       "Chưa có tin nhắn...",
+        // UART log card
+        "uart.title":       "Nhật ký UART",
+        "uart.empty":       "Chưa có dữ liệu...",
 
         // Camera placeholder
         "cam.ph.title":     "CAMERA CHƯA KHỞI ĐỘNG",
@@ -76,7 +76,7 @@ const TRANSLATIONS = {
         // Nav / tooltips
         "nav.wifi":         "WiFi",
         "nav.estop":        "DỪNG KHẨN",
-        "tip.mqtt":         "Kết nối MQTT",
+        "tip.uart":         "Kết nối UART",
         "tip.camera":       "Camera",
         "tip.wifi":         "Cài đặt WiFi",
         "tip.fullscreen":   "Toàn màn hình",
@@ -104,7 +104,7 @@ const TRANSLATIONS = {
         "step3.title":      "Object Track",
         "step3.desc":       "ID assignment",
         "step4.title":      "Conveyor CMD",
-        "step4.desc":       "MQTT publish",
+        "step4.desc":       "UART send",
 
         "cam.title":        "Camera Source",
         "cam.type":         "Type",
@@ -133,8 +133,8 @@ const TRANSLATIONS = {
         "color.loading":    "Loading...",
         "color.empty":      "No colors configured",
 
-        "mqtt.title":       "MQTT Log",
-        "mqtt.empty":       "No messages yet...",
+        "uart.title":       "UART Log",
+        "uart.empty":       "No data yet...",
 
         "cam.ph.title":     "CAMERA NOT STARTED",
         "cam.ph.sub":       "Select a source and press Start",
@@ -145,7 +145,7 @@ const TRANSLATIONS = {
 
         "nav.wifi":         "WiFi",
         "nav.estop":        "E-STOP",
-        "tip.mqtt":         "MQTT Broker",
+        "tip.uart":         "UART Serial",
         "tip.camera":       "Camera",
         "tip.wifi":         "WiFi Settings",
         "tip.fullscreen":   "Fullscreen",
@@ -172,7 +172,7 @@ const TRANSLATIONS = {
         "step3.title":      "物体追跡",
         "step3.desc":       "ID割り当て",
         "step4.title":      "搬送指令",
-        "step4.desc":       "MQTT送信",
+        "step4.desc":       "UART送信",
 
         "cam.title":        "カメラソース",
         "cam.type":         "種類",
@@ -201,8 +201,8 @@ const TRANSLATIONS = {
         "color.loading":    "読込中...",
         "color.empty":      "色が設定されていません",
 
-        "mqtt.title":       "MQTTログ",
-        "mqtt.empty":       "メッセージなし...",
+        "uart.title":       "UARTログ",
+        "uart.empty":       "データなし...",
 
         "cam.ph.title":     "カメラ未起動",
         "cam.ph.sub":       "ソースを選択して開始してください",
@@ -213,7 +213,7 @@ const TRANSLATIONS = {
 
         "nav.wifi":         "WiFi",
         "nav.estop":        "緊急停止",
-        "tip.mqtt":         "MQTTブローカー",
+        "tip.uart":         "UARTシリアル",
         "tip.camera":       "カメラ",
         "tip.wifi":         "WiFi設定",
         "tip.fullscreen":   "全画面",

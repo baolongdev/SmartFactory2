@@ -406,11 +406,11 @@
         }
 
         /* ═══════════════════════════════════════════════════════
-           MQTT LOG
+           UART LOG
         ═══════════════════════════════════════════════════════ */
-        #mqtt-log { font-family: 'Fira Mono', 'Consolas', monospace; }
-        #mqtt-log > div { padding: 3px 0; border-bottom: 1px solid var(--border); font-size: 0.67rem; }
-        #mqtt-log > div:last-child { border-bottom: none; }
+        #uart-log { font-family: 'Fira Mono', 'Consolas', monospace; }
+        #uart-log > div { padding: 3px 0; border-bottom: 1px solid var(--border); font-size: 0.67rem; }
+        #uart-log > div:last-child { border-bottom: none; }
 
         /* JS-injected log helpers */
         .sf-log-entry { border-bottom: 1px solid var(--border); font-size: 0.67rem; }
@@ -558,7 +558,7 @@
 
             /* Card inner scroll heights */
             #detected-list  { max-height: 110px !important; }
-            #mqtt-log       { max-height: 110px !important; }
+            #uart-log       { max-height: 110px !important; }
 
             /* Color table: hide "ms" column */
             #color-table-body td:nth-child(3),
@@ -625,10 +625,10 @@
 
         <!-- ── Right Controls ─────────────────────────────── -->
         <div class="sf-header-actions">
-            <div id="mqtt-status" class="status-indicator status-offline"
-                 data-i18n-title="tip.mqtt" title="MQTT Broker">
+            <div id="uart-status" class="status-indicator status-offline"
+                 data-i18n-title="tip.uart" title="UART Serial">
                 <span class="dot-pulse"></span>
-                <span class="sf-status-label">MQTT</span>
+                <span class="sf-status-label">UART</span>
             </div>
             <div id="camera-status" class="status-indicator status-offline"
                  data-i18n-title="tip.camera" title="Camera">
@@ -854,21 +854,21 @@
                 </div>
             </div>
 
-            <!-- ─ MQTT Log ───────────────────────────────── -->
+            <!-- ─ UART Log ───────────────────────────────── -->
             <div class="sf-card">
                 <div class="sf-card-header">
                     <i class="fas fa-terminal"></i>
-                    <span data-i18n="mqtt.title">MQTT Log</span>
-                    <button id="btn-clear-mqtt"
+                    <span data-i18n="uart.title">UART Log</span>
+                    <button id="btn-clear-uart"
                             class="ml-auto nav-link" style="padding:2px 6px; font-size:0.72rem;">
                         <i class="fas fa-trash-can"></i>
                     </button>
                 </div>
                 <div class="p-0">
-                    <div id="mqtt-log"
+                    <div id="uart-log"
                          class="overflow-y-auto px-3 py-2"
                          style="background:var(--bg); max-height:145px;">
-                        <div class="sf-empty" data-i18n="mqtt.empty">No messages yet...</div>
+                        <div class="sf-empty" data-i18n="uart.empty">No data yet...</div>
                     </div>
                 </div>
             </div>

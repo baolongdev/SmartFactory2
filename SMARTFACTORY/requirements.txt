@@ -3,8 +3,8 @@ flask>=3.0.0
 flask-cors>=4.0.0
 Werkzeug>=3.0.0
 
-# MQTT Protocol
-paho-mqtt>=2.0.0
+# Serial / UART communication
+pyserial>=3.5
 
 # Computer Vision (Use PiWheels for ARM)
 opencv-python-headless==4.8.1.78

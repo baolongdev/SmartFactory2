@@ -1,7 +1,7 @@
 // ======================== IMPORT MODULES ===========================
 import { switchCameraType, initFullscreenButton, initEmergencyStop, loadUSBCameras } from "./ui_camera.js";
 import { startCamera, stopCamera } from "./camera_control.js";
-import { pollMQTTStatus } from "./mqtt.js";
+import { pollUARTStatus } from "./uart.js";
 import { pollDetections } from "./detection.js";
 import {
     renderColorTable,
@@ -77,11 +77,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         });
 
-    // MQTT log clear
-    document.getElementById('btn-clear-mqtt')
+    // UART log clear
+    document.getElementById('btn-clear-uart')
         ?.addEventListener('click', () => {
-            const box = document.getElementById("mqtt-log");
-            if (box) box.innerHTML = `<div class="sf-empty">${t('mqtt.empty')}</div>`;
+            const box = document.getElementById("uart-log");
+            if (box) box.innerHTML = `<div class="sf-empty">${t('uart.empty')}</div>`;
         });
 
     // Language switcher
@@ -99,10 +99,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             if (ptitle) ptitle.textContent = t('cam.ph.title');
             if (psub)   psub.textContent   = t('cam.ph.sub');
         }
-        // MQTT log empty state (only if it shows the empty message)
-        const mqttLog = document.getElementById('mqtt-log');
-        const emptyDiv = mqttLog?.querySelector('.sf-empty');
-        if (emptyDiv) emptyDiv.textContent = t('mqtt.empty');
+        // UART log empty state (only if it shows the empty message)
+        const uartLog = document.getElementById('uart-log');
+        const emptyDiv = uartLog?.querySelector('.sf-empty');
+        if (emptyDiv) emptyDiv.textContent = t('uart.empty');
         // Detection empty state
         const detList = document.getElementById('detected-list');
         const detEmpty = detList?.querySelector('.sf-placeholder');
@@ -118,9 +118,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Running these first means USB list, colors and MQTT are ready even
     // if the camera fails to start, so the user doesn't need a full reload.
     await loadUSBCameras();
-    pollMQTTStatus();
+    pollUARTStatus();
     await renderColorTable();
-    setInterval(pollMQTTStatus, 5000);
+    setInterval(pollUARTStatus, 5000);
 
     // ── Camera auto-start ─────────────────────────────────────────────────
     switchCameraType();

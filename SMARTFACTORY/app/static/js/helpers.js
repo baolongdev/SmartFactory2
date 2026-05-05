@@ -2,28 +2,9 @@
 
 // API BASES
 export const CAMERA_API_BASE = "/api/camera";
-export const MQTT_API_BASE   = "/api/mqtt";
+export const UART_API_BASE   = "/api/uart";
 export const COLOR_API_BASE  = "/api/colors";
 export const PCLS_API_BASE   = "/api/pcls";
 
 // PCLS color code map (red=1, blue=2, yellow=3)
 export const PCLS_COLOR_CODES = { red: 1, blue: 2, yellow: 3 };
-
-// MQTT FEEDS (phù hợp config_mqtt.json)
-export const CMD_FEED = "V1";
-export const STATUS_FEED = "V2";
-
-/**
- * Build topic: user/feeds/feed
- */
-export function buildFeedTopic(user, feed) {
-    return `${user}/feeds/${feed}`;
-}
-
-/**
- * Lấy user (conveyor) đang chọn
- */
-export function getSelectedUser() {
-    const sel = document.getElementById("conveyor-select");
-    return sel ? sel.value : null;
-}

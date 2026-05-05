@@ -1,17 +1,16 @@
-import { sendMQTT, pollMQTTMessages } from "./mqtt.js";
-import { buildFeedTopic, CMD_FEED, STATUS_FEED } from "./helpers.js";
+import { sendUART, readUART } from "./uart.js";
 
 const pingIntervals = {};
 
 /**
- * Ping conveyor to check status
- * Updates workflow step 4 (Conveyor Control)
- * @param {string} user - Conveyor user (e.g., "0_SmartConvey2025")
+ * Ping conveyor over UART to check status.
+ * Sends {"action":"PING"} and polls readUART() for a READY response.
+ * @param {string} user - conveyor identifier (used only for UI element IDs)
  */
 export async function pingConveyor(user) {
     setConveyorStatus(user, "PING...");
 
-    await sendMQTT(buildFeedTopic(user, CMD_FEED), JSON.stringify({ action: "PING" }));
+    await sendUART({ action: "PING" });
 
     let timeout = false;
     const timeoutId = setTimeout(() => {
@@ -23,7 +22,7 @@ export async function pingConveyor(user) {
     pingIntervals[user] = setInterval(async () => {
         if (timeout) return;
 
-        const msg = await pollMQTTMessages(buildFeedTopic(user, STATUS_FEED));
+        const msg = await readUART();
         if (!msg) return;
 
         const text = typeof msg === "string" ? msg : JSON.stringify(msg);
@@ -41,9 +40,9 @@ export async function pingConveyor(user) {
 }
 
 /**
- * Update conveyor status display
- * @param {string} user - Conveyor user
- * @param {string} status - Status text
+ * Update conveyor status display.
+ * @param {string} user - conveyor identifier
+ * @param {string} status - "READY" | "TIMEOUT" | "PING..." | "DONE" | "--"
  */
 export function setConveyorStatus(user, status) {
     const el = document.getElementById(`status-${user}`);

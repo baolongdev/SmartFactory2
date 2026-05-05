@@ -44,7 +44,7 @@ from app.middleware.logging_middleware import init_logging_middleware
 from .routes import register_routes
 
 # Import services for initialization
-from app.services import camera_service, mqtt_service
+from app.services import camera_service, uart_service
 
 import structlog
 
@@ -110,7 +110,7 @@ def create_app(env: str | None = None) -> Flask:
     # Camera and MQTT services need Flask app reference for logging
     # ---------------------------------------------------------------------------
     camera_service.init_app(app)
-    mqtt_service.init_app(app)
+    uart_service.init_app(app)
 
     # ---------------------------------------------------------------------------
     # Register Routes
