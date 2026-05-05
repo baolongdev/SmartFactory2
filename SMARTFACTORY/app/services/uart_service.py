@@ -106,7 +106,7 @@ class UARTService:
             logger.warning("uart_send_skipped_not_connected", command=command)
             return False
         try:
-            line = f"{command}\n"
+            line = f"{command}\r\n"
             with self._write_lock:
                 self.ser.write(line.encode("utf-8"))
             logger.info("uart_sent", command=command)
