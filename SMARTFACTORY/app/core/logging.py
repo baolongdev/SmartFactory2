@@ -201,16 +201,19 @@ def configure_logging() -> None:
 
         # Rename 'event' key to 'message' for compatibility
         structlog.processors.EventRenamer("message"),
-
-        # Add callsite information (module, function, line number)
-        structlog.processors.CallsiteParameterAdder(
-            {
-                structlog.processors.CallsiteParameter.MODULE,
-                structlog.processors.CallsiteParameter.FUNC_NAME,
-                structlog.processors.CallsiteParameter.LINENO,
-            }
-        ),
     ]
+
+    # Callsite info (module/func/lineno) only in DEBUG — too noisy otherwise
+    if numeric_level <= logging.DEBUG:
+        shared_processors.append(
+            structlog.processors.CallsiteParameterAdder(
+                {
+                    structlog.processors.CallsiteParameter.MODULE,
+                    structlog.processors.CallsiteParameter.FUNC_NAME,
+                    structlog.processors.CallsiteParameter.LINENO,
+                }
+            )
+        )
 
     # -----------------------------------------------------------------------
     # Choose Renderer

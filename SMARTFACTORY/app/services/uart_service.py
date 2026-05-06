@@ -90,6 +90,10 @@ class UARTService:
 
         self._write_lock = threading.Lock()
 
+        # Rate-limit connect-failure warnings: log once per 60 s
+        self._last_connect_warn: float = 0.0
+        self._CONNECT_WARN_COOLDOWN: float = 60.0
+
     def init_app(self, app) -> None:
         configured = os.environ.get("UART_PORT", "/dev/ttyACM0")
         self.baudrate = int(os.environ.get("UART_BAUDRATE", "115200"))
@@ -115,7 +119,12 @@ class UARTService:
         except Exception as e:
             self.ser = None
             self.connected = False
-            logger.warning("uart_connect_failed", port=self.port, error=str(e))
+            now = time.time()
+            if now - self._last_connect_warn >= self._CONNECT_WARN_COOLDOWN:
+                logger.warning("uart_connect_failed", port=self.port, error=str(e))
+                self._last_connect_warn = now
+            else:
+                logger.debug("uart_connect_failed_suppressed", port=self.port)
 
     # ── RX thread ─────────────────────────────────────────────────────────────
 
