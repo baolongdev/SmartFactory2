@@ -397,13 +397,11 @@
             transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
             -webkit-appearance: none; -moz-appearance: none; appearance: none;
         }
-        /* Color select: fill the column */
-        .color-name { width: 100%; min-width: 80px; }
-        /* Action/ms: number inputs — fixed small width */
-        .color-action  { width: 46px; text-align: center; }
-        .color-duration { width: 56px; text-align: right; }
-        /* Servo select: enough for "Servo 2" */
-        .color-servo { width: 100%; min-width: 78px; }
+        /* All inputs/selects fill their fixed column */
+        .color-name    { width: 100%; }
+        .color-action  { width: 100%; text-align: center; }
+        .color-duration { width: 100%; text-align: right; }
+        .color-servo   { width: 100%; }
 
         .color-name:hover, .color-action:hover, .color-duration:hover, .color-servo:hover {
             border-color: var(--border);
@@ -867,22 +865,30 @@
                 </div>
                 <div class="p-0">
                     <div class="overflow-y-auto overflow-x-auto" style="max-height:155px;">
-                        <table id="color-config-table" class="text-xs" style="width:100%; min-width:340px;">
+                        <table id="color-config-table" class="text-xs"
+                               style="width:100%; min-width:360px; table-layout:fixed;">
+                            <colgroup>
+                                <col style="width:32%;">  <!-- Color   -->
+                                <col style="width:15%;">  <!-- Action  -->
+                                <col style="width:18%;">  <!-- ms      -->
+                                <col style="width:25%;">  <!-- Servo   -->
+                                <col style="width:10%;">  <!-- Delete  -->
+                            </colgroup>
                             <thead class="sticky top-0 z-10" style="background:var(--bg-subtle);">
                                 <tr style="border-bottom:1px solid var(--border);">
                                     <th class="text-left px-3 py-2 font-semibold uppercase tracking-wider"
-                                        style="color:var(--fg-muted); min-width:110px; white-space:nowrap;"
+                                        style="color:var(--fg-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
                                         data-i18n="color.col">Color</th>
                                     <th class="text-left px-3 py-2 font-semibold uppercase tracking-wider"
-                                        style="color:var(--fg-muted); width:58px; min-width:58px; white-space:nowrap;"
+                                        style="color:var(--fg-muted); white-space:nowrap;"
                                         data-i18n="color.action">Action</th>
                                     <th class="text-left px-3 py-2 font-semibold uppercase tracking-wider"
-                                        style="color:var(--fg-muted); width:68px; min-width:68px; white-space:nowrap;"
+                                        style="color:var(--fg-muted); white-space:nowrap;"
                                         data-i18n="color.ms">ms</th>
                                     <th class="text-left px-3 py-2 font-semibold uppercase tracking-wider"
-                                        style="color:var(--fg-muted); min-width:90px; white-space:nowrap;"
+                                        style="color:var(--fg-muted); white-space:nowrap;"
                                         data-i18n="color.servo">Servo</th>
-                                    <th class="px-3 py-2" style="width:36px;"></th>
+                                    <th class="px-3 py-2"></th>
                                 </tr>
                             </thead>
                             <tbody id="color-table-body">
