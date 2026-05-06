@@ -383,7 +383,7 @@
            COLOR TABLE
         ═══════════════════════════════════════════════════════ */
         #color-table-body tr td {
-            padding: 5px 9px; border-bottom: 1px solid var(--border);
+            padding: 5px 8px; border-bottom: 1px solid var(--border);
             vertical-align: middle;
         }
         #color-table-body tr:last-child td { border-bottom: none; }
@@ -393,14 +393,22 @@
             background: transparent; color: var(--fg);
             border: 1px solid transparent; border-radius: 4px;
             outline: none; font-size: 0.78rem; font-family: inherit;
-            padding: 3px 5px; width: 100%;
+            padding: 3px 5px;
             transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
             -webkit-appearance: none; -moz-appearance: none; appearance: none;
         }
-        .color-name:hover, .color-action:hover, .color-duration:hover {
+        /* Color select: fill the column */
+        .color-name { width: 100%; min-width: 80px; }
+        /* Action/ms: number inputs — fixed small width */
+        .color-action  { width: 46px; text-align: center; }
+        .color-duration { width: 56px; text-align: right; }
+        /* Servo select: enough for "Servo 2" */
+        .color-servo { width: 100%; min-width: 78px; }
+
+        .color-name:hover, .color-action:hover, .color-duration:hover, .color-servo:hover {
             border-color: var(--border);
         }
-        .color-name:focus, .color-action:focus, .color-duration:focus {
+        .color-name:focus, .color-action:focus, .color-duration:focus, .color-servo:focus {
             border-color: var(--primary);
             background: var(--bg);
         }
@@ -859,22 +867,22 @@
                 </div>
                 <div class="p-0">
                     <div class="overflow-y-auto overflow-x-auto" style="max-height:155px;">
-                        <table class="w-full text-xs">
+                        <table id="color-config-table" class="text-xs" style="width:100%; min-width:340px;">
                             <thead class="sticky top-0 z-10" style="background:var(--bg-subtle);">
                                 <tr style="border-bottom:1px solid var(--border);">
                                     <th class="text-left px-3 py-2 font-semibold uppercase tracking-wider"
-                                        style="color:var(--fg-muted);"
+                                        style="color:var(--fg-muted); min-width:110px; white-space:nowrap;"
                                         data-i18n="color.col">Color</th>
                                     <th class="text-left px-3 py-2 font-semibold uppercase tracking-wider"
-                                        style="color:var(--fg-muted);"
+                                        style="color:var(--fg-muted); width:58px; min-width:58px; white-space:nowrap;"
                                         data-i18n="color.action">Action</th>
                                     <th class="text-left px-3 py-2 font-semibold uppercase tracking-wider"
-                                        style="color:var(--fg-muted);"
+                                        style="color:var(--fg-muted); width:68px; min-width:68px; white-space:nowrap;"
                                         data-i18n="color.ms">ms</th>
                                     <th class="text-left px-3 py-2 font-semibold uppercase tracking-wider"
-                                        style="color:var(--fg-muted);"
+                                        style="color:var(--fg-muted); min-width:90px; white-space:nowrap;"
                                         data-i18n="color.servo">Servo</th>
-                                    <th class="px-3 py-2"></th>
+                                    <th class="px-3 py-2" style="width:36px;"></th>
                                 </tr>
                             </thead>
                             <tbody id="color-table-body">
