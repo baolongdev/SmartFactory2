@@ -365,25 +365,65 @@
         }
 
         /* ═══════════════════════════════════════════════════════
+           SIDEBAR KEY-VALUE ROW  (reusable across all cards)
+        ═══════════════════════════════════════════════════════ */
+        .sf-kv-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 7px 13px; border-bottom: 1px solid var(--border);
+            font-size: 0.78rem; gap: 8px;
+        }
+        .sf-kv-row:last-child { border-bottom: none; }
+        .sf-kv-label {
+            font-size: 0.67rem; font-weight: 600;
+            color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.05em;
+            flex-shrink: 0;
+        }
+        .sf-kv-value {
+            font-family: 'Fira Mono', monospace; font-size: 0.75rem;
+            color: var(--fg); text-align: right;
+        }
+        /* Subtle group divider — thicker top border on first row of next group */
+        .sf-kv-group { border-top: 2px solid var(--border); }
+
+        /* ═══════════════════════════════════════════════════════
+           UART BADGES
+        ═══════════════════════════════════════════════════════ */
+        .uart-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 2px 9px; border-radius: 99px; font-size: 0.68rem; font-weight: 700;
+        }
+        .uart-badge-connected { background: var(--success-muted);     color: var(--success);     border: 1px solid var(--success); }
+        .uart-badge-offline   { background: var(--destructive-muted); color: var(--destructive); border: 1px solid var(--destructive); }
+        .uart-state-badge     { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 0.68rem; font-weight: 700; }
+        .uart-state-on        { background: var(--success-muted);     color: var(--success);     border: 1px solid var(--success); }
+        .uart-state-off       { background: var(--bg-muted);          color: var(--fg-subtle);   border: 1px solid var(--border); }
+
+        /* ═══════════════════════════════════════════════════════
            DETECTED LIST
         ═══════════════════════════════════════════════════════ */
         #detected-list li {
             display: flex; align-items: center; gap: 8px;
-            padding: 5px 0; border-bottom: 1px solid var(--border);
+            padding: 7px 13px; border-bottom: 1px solid var(--border);
             font-size: 0.78rem;
         }
         #detected-list li:last-child { border-bottom: none; }
-
-        /* JS-injected detection item helpers */
-        .sf-detect-item  { border-bottom: 1px solid var(--border); }
-        .sf-detect-name  { color: var(--fg); font-weight: 600; }
-        .sf-detect-meta  { color: var(--fg-subtle); font-size: 0.69rem; }
+        .sf-detect-name { color: var(--fg); font-weight: 600; }
+        .sf-detect-meta { color: var(--fg-subtle); font-size: 0.69rem; }
 
         /* ═══════════════════════════════════════════════════════
            COLOR TABLE
         ═══════════════════════════════════════════════════════ */
+        #color-config-table thead th {
+            padding: 7px 10px;
+            font-size: 0.67rem; font-weight: 700;
+            color: var(--fg-muted); text-transform: uppercase; letter-spacing: 0.06em;
+            white-space: nowrap; text-align: left;
+            background: var(--bg-subtle);
+            border-bottom: 1px solid var(--border);
+            position: sticky; top: 0; z-index: 1;
+        }
         #color-table-body tr td {
-            padding: 5px 8px; border-bottom: 1px solid var(--border);
+            padding: 6px 10px; border-bottom: 1px solid var(--border);
             vertical-align: middle;
         }
         #color-table-body tr:last-child td { border-bottom: none; }
@@ -393,69 +433,32 @@
             background: transparent; color: var(--fg);
             border: 1px solid transparent; border-radius: 4px;
             outline: none; font-size: 0.78rem; font-family: inherit;
-            padding: 3px 5px;
-            transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+            padding: 3px 6px;
+            transition: border-color 0.15s, background 0.15s;
             -webkit-appearance: none; -moz-appearance: none; appearance: none;
         }
-        .color-action  { text-align: center; }
+        .color-action   { text-align: center; }
         .color-duration { min-width: 72px; }
-
-        .color-name:hover, .color-action:hover, .color-duration:hover, .color-servo:hover {
-            border-color: var(--border);
-        }
+        .color-name:hover, .color-action:hover, .color-duration:hover, .color-servo:hover { border-color: var(--border); }
         .color-name:focus, .color-action:focus, .color-duration:focus, .color-servo:focus {
-            border-color: var(--primary);
-            background: var(--bg);
+            border-color: var(--primary); background: var(--bg);
         }
 
         /* ═══════════════════════════════════════════════════════
            UART LOG
         ═══════════════════════════════════════════════════════ */
         #uart-log { font-family: 'Fira Mono', 'Consolas', monospace; }
-        #uart-log > div { padding: 3px 0; border-bottom: 1px solid var(--border); font-size: 0.67rem; }
-        #uart-log > div:last-child { border-bottom: none; }
-
-        /* JS-injected log helpers */
-        .sf-log-entry  { border-bottom: 1px solid var(--border); font-size: 0.67rem; }
+        .sf-log-entry  { padding: 4px 0; border-bottom: 1px solid var(--border); font-size: 0.67rem; }
+        .sf-log-entry:last-child { border-bottom: none; }
         .sf-log-time   { color: var(--fg-subtle); margin-right: 4px; }
         .sf-log-arrow  { font-weight: 700; margin-right: 4px; }
-        /* TX arrows */
         .sf-log-tx .sf-log-arrow { color: var(--primary); }
-        /* RX arrows */
         .sf-log-rx .sf-log-arrow { color: var(--warning); }
-        /* TX content colours by command type */
         .sf-log-run    { color: var(--success);     font-weight: 600; }
         .sf-log-stop   { color: var(--fg-subtle); }
         .sf-log-servo  { color: var(--warning);     font-weight: 600; }
         .sf-log-estop  { color: var(--destructive); font-weight: 700; }
-        /* RX content */
         .sf-log-rx .sf-log-text { color: var(--warning); }
-
-        /* ═══════════════════════════════════════════════════════
-           UART CONNECTION CARD
-        ═══════════════════════════════════════════════════════ */
-        .uart-info-row {
-            display: flex; align-items: center; justify-content: space-between;
-            padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 0.78rem;
-        }
-        .uart-info-row:last-child { border-bottom: none; }
-        .uart-info-label { color: var(--fg-subtle); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
-        .uart-info-value { font-weight: 600; color: var(--fg); font-family: 'Fira Mono', monospace; font-size: 0.78rem; }
-        .uart-badge {
-            display: inline-flex; align-items: center; gap: 5px;
-            padding: 3px 9px; border-radius: 99px; font-size: 0.72rem; font-weight: 700;
-        }
-        .uart-badge-connected { background: var(--success-muted); color: var(--success); border: 1px solid var(--success); }
-        .uart-badge-offline   { background: var(--destructive-muted); color: var(--destructive); border: 1px solid var(--destructive); }
-        /* Device state badges */
-        .uart-state-badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 0.68rem; font-weight: 700; }
-        .uart-state-on    { background: var(--success-muted);     color: var(--success);     border: 1px solid var(--success); }
-        .uart-state-off   { background: var(--bg-muted);          color: var(--fg-subtle);   border: 1px solid var(--border); }
-        /* Device state list */
-        .uart-state-grid  { display: flex; flex-direction: column; gap: 0; padding-top: 4px; }
-        .uart-state-item  { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); }
-        .uart-state-item:last-child { border-bottom: none; }
-        .uart-state-label { font-size: 0.72rem; color: var(--fg-subtle); }
 
         /* ═══════════════════════════════════════════════════════
            DETECTION COUNT BADGE
@@ -589,11 +592,11 @@
             #detected-list  { max-height: 110px !important; }
             #uart-log       { max-height: 110px !important; }
 
-            /* Color table: hide "ms" and "servo" columns */
+            /* Color table: hide "ms" and "servo" columns on small screens */
+            #color-config-table thead th:nth-child(3),
+            #color-config-table thead th:nth-child(4),
             #color-table-body td:nth-child(3),
-            #color-table-body thead th:nth-child(3),
-            #color-table-body td:nth-child(4),
-            #color-table-body thead th:nth-child(4) { display: none; }
+            #color-table-body td:nth-child(4) { display: none; }
         }
 
         /* ── Very small  < 400px ─────────────────────────────── */
@@ -763,7 +766,6 @@
                                style="color:var(--fg-subtle); font-size:0.62rem;"></i>
                         </div>
                     </div>
-
                     <div id="usb-group">
                         <label class="sf-label" data-i18n="cam.device">Device</label>
                         <div class="relative">
@@ -774,13 +776,11 @@
                                style="color:var(--fg-subtle); font-size:0.62rem;"></i>
                         </div>
                     </div>
-
                     <div id="rtsp-group" style="display:none;">
                         <label class="sf-label" data-i18n="cam.url">Stream URL</label>
                         <input id="rtsp-url" type="text" class="sf-input"
                                data-i18n-ph="cam.url.ph" placeholder="rtsp:// or http://">
                     </div>
-
                     <div class="flex gap-2">
                         <button id="btn-start-camera" class="sf-btn sf-btn-primary flex-1">
                             <i class="fas fa-play"></i>
@@ -800,42 +800,39 @@
                     <i class="fas fa-plug"></i>
                     <span data-i18n="uart.card.title">UART Connection</span>
                 </div>
-                <div class="sf-card-body flex flex-col gap-2" id="uart-info-panel">
+                <div id="uart-info-panel">
                     <!-- Connection info -->
-                    <div class="uart-info-row">
-                        <span class="uart-info-label" data-i18n="uart.card.status">Trạng thái</span>
+                    <div class="sf-kv-row">
+                        <span class="sf-kv-label" data-i18n="uart.card.status">Trạng thái</span>
                         <span id="uart-conn-badge" class="uart-badge uart-badge-offline">
-                            <span class="dot-pulse" style="width:6px;height:6px;border-radius:50%;display:inline-block;background:currentColor;"></span>
+                            <span style="width:6px;height:6px;border-radius:50%;display:inline-block;background:currentColor;"></span>
                             <span id="uart-conn-text">Offline</span>
                         </span>
                     </div>
-                    <div class="uart-info-row">
-                        <span class="uart-info-label" data-i18n="uart.card.port">Cổng</span>
-                        <span class="uart-info-value" id="uart-conn-port">—</span>
+                    <div class="sf-kv-row">
+                        <span class="sf-kv-label" data-i18n="uart.card.port">Cổng</span>
+                        <span class="sf-kv-value" id="uart-conn-port">—</span>
                     </div>
-                    <div class="uart-info-row">
-                        <span class="uart-info-label" data-i18n="uart.card.baud">Baud rate</span>
-                        <span class="uart-info-value" id="uart-conn-baud">—</span>
+                    <div class="sf-kv-row">
+                        <span class="sf-kv-label" data-i18n="uart.card.baud">Baud rate</span>
+                        <span class="sf-kv-value" id="uart-conn-baud">—</span>
                     </div>
-                    <div class="uart-info-row">
-                        <span class="uart-info-label" data-i18n="uart.card.last">Lệnh cuối</span>
-                        <span class="uart-info-value" id="uart-conn-last">—</span>
+                    <div class="sf-kv-row">
+                        <span class="sf-kv-label" data-i18n="uart.card.last">Lệnh cuối</span>
+                        <span class="sf-kv-value" id="uart-conn-last">—</span>
                     </div>
-
-                    <!-- Device state -->
-                    <div class="uart-state-grid" style="border-top: 1px solid var(--border); padding-top:8px; margin-top:2px;">
-                        <div class="uart-state-item">
-                            <span class="uart-state-label" data-i18n="uart.card.conveyor">Băng tải</span>
-                            <span id="uart-state-conveyor" class="uart-state-badge uart-state-off">STOPPED</span>
-                        </div>
-                        <div class="uart-state-item">
-                            <span class="uart-state-label" data-i18n="uart.card.servo1">Servo 1</span>
-                            <span id="uart-state-servo1" class="uart-state-badge uart-state-off">CLOSED</span>
-                        </div>
-                        <div class="uart-state-item">
-                            <span class="uart-state-label" data-i18n="uart.card.servo2">Servo 2</span>
-                            <span id="uart-state-servo2" class="uart-state-badge uart-state-off">CLOSED</span>
-                        </div>
+                    <!-- Device state (separated by thicker border) -->
+                    <div class="sf-kv-row sf-kv-group">
+                        <span class="sf-kv-label" data-i18n="uart.card.conveyor">Băng tải</span>
+                        <span id="uart-state-conveyor" class="uart-state-badge uart-state-off">STOPPED</span>
+                    </div>
+                    <div class="sf-kv-row">
+                        <span class="sf-kv-label" data-i18n="uart.card.servo1">Servo 1</span>
+                        <span id="uart-state-servo1" class="uart-state-badge uart-state-off">CLOSED</span>
+                    </div>
+                    <div class="sf-kv-row">
+                        <span class="sf-kv-label" data-i18n="uart.card.servo2">Servo 2</span>
+                        <span id="uart-state-servo2" class="uart-state-badge uart-state-off">CLOSED</span>
                     </div>
                 </div>
             </div>
@@ -848,11 +845,9 @@
                     <span id="detection-count"
                           class="ml-auto text-xs font-bold px-2 py-0.5 rounded-full count-badge">0</span>
                 </div>
-                <div class="p-0">
-                    <ul id="detected-list" class="overflow-y-auto px-3 py-2" style="max-height:130px;">
-                        <li class="sf-placeholder sf-empty" data-i18n="det.empty">No objects detected</li>
-                    </ul>
-                </div>
+                <ul id="detected-list" class="overflow-y-auto" style="max-height:120px;">
+                    <li class="sf-placeholder sf-empty" data-i18n="det.empty">No objects detected</li>
+                </ul>
             </div>
 
             <!-- ─ Color Configuration ────────────────────── -->
@@ -861,44 +856,34 @@
                     <i class="fas fa-palette"></i>
                     <span data-i18n="color.title">Color Configuration</span>
                 </div>
-                <div class="p-0">
-                    <div class="overflow-y-auto overflow-x-auto" style="max-height:155px;">
-                        <table id="color-config-table" class="text-xs" style="width:100%;">
-                            <thead class="sticky top-0 z-10" style="background:var(--bg-subtle);">
-                                <tr style="border-bottom:1px solid var(--border);">
-                                    <th class="text-left px-3 py-2 font-semibold uppercase tracking-wider"
-                                        style="color:var(--fg-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis;"
-                                        data-i18n="color.col">Color</th>
-                                    <th class="text-left px-3 py-2 font-semibold uppercase tracking-wider"
-                                        style="color:var(--fg-muted); white-space:nowrap;"
-                                        data-i18n="color.action">Action</th>
-                                    <th class="text-left px-3 py-2 font-semibold uppercase tracking-wider"
-                                        style="color:var(--fg-muted); white-space:nowrap; min-width:80px;"
-                                        data-i18n="color.ms">ms</th>
-                                    <th class="text-left px-3 py-2 font-semibold uppercase tracking-wider"
-                                        style="color:var(--fg-muted); white-space:nowrap;"
-                                        data-i18n="color.servo">Servo</th>
-                                    <th class="px-3 py-2"></th>
-                                </tr>
-                            </thead>
-                            <tbody id="color-table-body">
-                                <tr>
-                                    <td colspan="5" class="px-3 py-4 text-center sf-empty"
-                                        data-i18n="color.loading">Loading...</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="flex gap-2 p-3" style="border-top:1px solid var(--border);">
-                        <button id="btn-add-color" class="sf-btn sf-btn-ghost sf-btn-sm flex-1">
-                            <i class="fas fa-plus"></i>
-                            <span data-i18n="color.add">Add</span>
-                        </button>
-                        <button id="btn-save-color" class="sf-btn sf-btn-primary sf-btn-sm flex-1">
-                            <i class="fas fa-floppy-disk"></i>
-                            <span data-i18n="color.save">Save</span>
-                        </button>
-                    </div>
+                <div class="overflow-y-auto overflow-x-auto" style="max-height:160px;">
+                    <table id="color-config-table" style="width:100%;">
+                        <thead>
+                            <tr>
+                                <th data-i18n="color.col">Color</th>
+                                <th data-i18n="color.action">Action</th>
+                                <th data-i18n="color.ms">ms</th>
+                                <th data-i18n="color.servo">Servo</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="color-table-body">
+                            <tr>
+                                <td colspan="5" class="sf-empty" style="padding:14px; text-align:center;"
+                                    data-i18n="color.loading">Loading...</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="flex gap-2 p-3" style="border-top:1px solid var(--border);">
+                    <button id="btn-add-color" class="sf-btn sf-btn-ghost sf-btn-sm flex-1">
+                        <i class="fas fa-plus"></i>
+                        <span data-i18n="color.add">Add</span>
+                    </button>
+                    <button id="btn-save-color" class="sf-btn sf-btn-primary sf-btn-sm flex-1">
+                        <i class="fas fa-floppy-disk"></i>
+                        <span data-i18n="color.save">Save</span>
+                    </button>
                 </div>
             </div>
 
@@ -907,17 +892,13 @@
                 <div class="sf-card-header">
                     <i class="fas fa-terminal"></i>
                     <span data-i18n="uart.title">UART Log</span>
-                    <button id="btn-clear-uart"
-                            class="ml-auto nav-link" style="padding:2px 6px; font-size:0.72rem;">
+                    <button id="btn-clear-uart" class="ml-auto nav-link"
+                            style="padding:2px 6px; font-size:0.72rem;" data-i18n-title="tip.uart">
                         <i class="fas fa-trash-can"></i>
                     </button>
                 </div>
-                <div class="p-0">
-                    <div id="uart-log"
-                         class="overflow-y-auto px-3 py-2"
-                         style="background:var(--bg); max-height:145px;">
-                        <div class="sf-empty" data-i18n="uart.empty">No data yet...</div>
-                    </div>
+                <div id="uart-log" class="overflow-y-auto px-3 py-2" style="max-height:150px;">
+                    <div class="sf-empty" data-i18n="uart.empty">No data yet...</div>
                 </div>
             </div>
 
