@@ -18,21 +18,50 @@ export async function sendUART(command) {
 }
 
 /**
- * Poll UART connection status, cập nhật indicator #uart-status.
+ * Poll UART connection status.
+ * Cập nhật header indicator (#uart-status) và card info panel (#uart-info-panel).
  */
 export async function pollUARTStatus() {
     try {
         const res = await fetch(`${UART_API_BASE}/status`);
         if (!res.ok) return;
         const { data } = await res.json();
+
+        // ── Header indicator ─────────────────────────────────────────────
         const el = document.getElementById("uart-status");
-        if (!el) return;
-        if (data.connected) {
-            el.className = "status-indicator status-online";
-            el.innerHTML = `<span class="dot-pulse"></span><span>UART ${data.port}</span>`;
-        } else {
-            el.className = "status-indicator status-offline";
-            el.innerHTML = `<span class="dot-pulse"></span><span>UART Offline</span>`;
+        if (el) {
+            if (data.connected) {
+                el.className = "status-indicator status-online";
+                el.innerHTML = `<span class="dot-pulse"></span><span>UART</span>`;
+            } else {
+                el.className = "status-indicator status-offline";
+                el.innerHTML = `<span class="dot-pulse"></span><span>UART</span>`;
+            }
+        }
+
+        // ── Card info panel ──────────────────────────────────────────────
+        const badge = document.getElementById("uart-conn-badge");
+        const text  = document.getElementById("uart-conn-text");
+        const port  = document.getElementById("uart-conn-port");
+        const baud  = document.getElementById("uart-conn-baud");
+        const last  = document.getElementById("uart-conn-last");
+
+        if (badge && text) {
+            if (data.connected) {
+                badge.className = "uart-badge uart-badge-connected";
+                text.textContent = "Connected";
+            } else {
+                badge.className = "uart-badge uart-badge-offline";
+                text.textContent = "Offline";
+            }
+        }
+        if (port) port.textContent = data.port  || "—";
+        if (baud) baud.textContent = data.baudrate ? `${data.baudrate} bps` : "—";
+        if (last) {
+            const cmd = data.last_command;
+            if      (cmd === 1) { last.textContent = "1 — RUN";  last.style.color = "var(--success)"; }
+            else if (cmd === 0) { last.textContent = "0 — STOP"; last.style.color = "var(--fg-subtle)"; }
+            else                { last.textContent = "—";         last.style.color = ""; }
         }
     } catch (_) {}
 }

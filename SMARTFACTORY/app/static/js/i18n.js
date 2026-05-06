@@ -27,7 +27,7 @@ const TRANSLATIONS = {
         "step3.title":      "Theo dõi vật",
         "step3.desc":       "Gán ID đối tượng",
         "step4.title":      "Lệnh băng tải",
-        "step4.desc":       "Gửi UART",
+        "step4.desc":       "UART Serial",
 
         // Camera source card
         "cam.title":        "Nguồn Camera",
@@ -40,11 +40,12 @@ const TRANSLATIONS = {
         "cam.start":        "Bắt đầu",
         "cam.stop":         "Dừng",
 
-        // Conveyor card
-        "conv.title":       "Hệ thống Băng tải",
-        "conv.select":      "Chọn băng tải",
-        "conv.0":           "Băng tải 0",
-        "conv.1":           "Băng tải 1",
+        // UART connection card
+        "uart.card.title":  "Kết nối UART",
+        "uart.card.status": "Trạng thái",
+        "uart.card.port":   "Cổng",
+        "uart.card.baud":   "Baud rate",
+        "uart.card.last":   "Lệnh cuối",
 
         // Detected objects card
         "det.title":        "Vật thể nhận diện",
@@ -116,10 +117,12 @@ const TRANSLATIONS = {
         "cam.start":        "Start",
         "cam.stop":         "Stop",
 
-        "conv.title":       "Conveyor System",
-        "conv.select":      "Select Conveyor",
-        "conv.0":           "Conveyor 0",
-        "conv.1":           "Conveyor 1",
+        // UART connection card
+        "uart.card.title":  "UART Connection",
+        "uart.card.status": "Status",
+        "uart.card.port":   "Port",
+        "uart.card.baud":   "Baud rate",
+        "uart.card.last":   "Last command",
 
         "det.title":        "Detected Objects",
         "det.empty":        "No objects detected",
@@ -184,10 +187,12 @@ const TRANSLATIONS = {
         "cam.start":        "開始",
         "cam.stop":         "停止",
 
-        "conv.title":       "搬送システム",
-        "conv.select":      "搬送機選択",
-        "conv.0":           "搬送機 0",
-        "conv.1":           "搬送機 1",
+        // UART connection card
+        "uart.card.title":  "UART接続",
+        "uart.card.status": "状態",
+        "uart.card.port":   "ポート",
+        "uart.card.baud":   "ボーレート",
+        "uart.card.last":   "最後のコマンド",
 
         "det.title":        "検出オブジェクト",
         "det.empty":        "物体未検出",

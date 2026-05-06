@@ -9,7 +9,6 @@ import {
     addNewColorRow,
     getColorHex,
 } from "./colors.js";
-import { pingConveyor } from "./conveyor.js";
 import { applyI18n, setLang, t } from "./i18n.js";
 
 // Expose t() so the inline theme toggle script can resolve i18n titles
@@ -57,10 +56,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         ?.addEventListener('click', startCamera);
     document.getElementById('btn-stop-camera')
         ?.addEventListener('click', stopCamera);
-
-    // Conveyor
-    document.getElementById('conveyor-select')
-        ?.addEventListener('change', e => pingConveyor(e.target.value));
 
     // Color config
     document.getElementById('btn-add-color')

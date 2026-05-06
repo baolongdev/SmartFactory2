@@ -427,15 +427,21 @@
         .sf-log-rx .sf-log-text { color: var(--warning); }
 
         /* ═══════════════════════════════════════════════════════
-           CONVEYOR STATUS CELL
+           UART CONNECTION CARD
         ═══════════════════════════════════════════════════════ */
-        .conveyor-status-cell {
-            padding: 5px 9px; border-radius: var(--radius);
-            font-size: 0.75rem; font-weight: 600;
-            background: var(--bg-muted); color: var(--fg-subtle);
-            border: 1px solid var(--border); text-align: center;
-            transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+        .uart-info-row {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 5px 0; border-bottom: 1px solid var(--border); font-size: 0.78rem;
         }
+        .uart-info-row:last-child { border-bottom: none; }
+        .uart-info-label { color: var(--fg-subtle); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; }
+        .uart-info-value { font-weight: 600; color: var(--fg); font-family: 'Fira Mono', monospace; font-size: 0.78rem; }
+        .uart-badge {
+            display: inline-flex; align-items: center; gap: 5px;
+            padding: 3px 9px; border-radius: 99px; font-size: 0.72rem; font-weight: 700;
+        }
+        .uart-badge-connected { background: var(--success-muted); color: var(--success); border: 1px solid var(--success); }
+        .uart-badge-offline   { background: var(--destructive-muted); color: var(--destructive); border: 1px solid var(--destructive); }
 
         /* ═══════════════════════════════════════════════════════
            DETECTION COUNT BADGE
@@ -772,34 +778,31 @@
                 </div>
             </div>
 
-            <!-- ─ Conveyor System ────────────────────────── -->
+            <!-- ─ UART Connection ─────────────────────────── -->
             <div class="sf-card">
                 <div class="sf-card-header">
-                    <i class="fas fa-conveyor-belt"></i>
-                    <span data-i18n="conv.title">Conveyor System</span>
+                    <i class="fas fa-plug"></i>
+                    <span data-i18n="uart.card.title">UART Connection</span>
                 </div>
-                <div class="sf-card-body flex flex-col gap-3">
-                    <div>
-                        <label class="sf-label" data-i18n="conv.select">Select Conveyor</label>
-                        <div class="relative">
-                            <select id="conveyor-select" class="sf-select">
-                                <option value="0_SmartConvey2025" data-i18n="conv.0">Conveyor 0</option>
-                                <option value="1_SmartConvey2025" data-i18n="conv.1">Conveyor 1</option>
-                            </select>
-                            <i class="fas fa-chevron-down absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-                               style="color:var(--fg-subtle); font-size:0.62rem;"></i>
-                        </div>
+                <div class="sf-card-body flex flex-col gap-2" id="uart-info-panel">
+                    <div class="uart-info-row">
+                        <span class="uart-info-label" data-i18n="uart.card.status">Trạng thái</span>
+                        <span id="uart-conn-badge" class="uart-badge uart-badge-offline">
+                            <span class="dot-pulse" style="width:6px;height:6px;border-radius:50%;display:inline-block;background:currentColor;"></span>
+                            <span id="uart-conn-text">Offline</span>
+                        </span>
                     </div>
-
-                    <div class="grid grid-cols-2 gap-2">
-                        <div>
-                            <label class="sf-label" data-i18n="conv.0">Conveyor 0</label>
-                            <div id="status-0_SmartConvey2025" class="conveyor-status-cell">--</div>
-                        </div>
-                        <div>
-                            <label class="sf-label" data-i18n="conv.1">Conveyor 1</label>
-                            <div id="status-1_SmartConvey2025" class="conveyor-status-cell">--</div>
-                        </div>
+                    <div class="uart-info-row">
+                        <span class="uart-info-label" data-i18n="uart.card.port">Cổng</span>
+                        <span class="uart-info-value" id="uart-conn-port">—</span>
+                    </div>
+                    <div class="uart-info-row">
+                        <span class="uart-info-label" data-i18n="uart.card.baud">Baud rate</span>
+                        <span class="uart-info-value" id="uart-conn-baud">—</span>
+                    </div>
+                    <div class="uart-info-row">
+                        <span class="uart-info-label" data-i18n="uart.card.last">Lệnh cuối</span>
+                        <span class="uart-info-value" id="uart-conn-last">—</span>
                     </div>
                 </div>
             </div>
