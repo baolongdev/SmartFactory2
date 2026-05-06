@@ -3,13 +3,13 @@
         "name": "red",
         "action_id": 1,
         "duration_ms": 4000,
-        "servo_id": 0
+        "servo_id": 1
     },
     {
         "name": "blue",
         "action_id": 2,
         "duration_ms": 6000,
-        "servo_id": 0
+        "servo_id": 2
     },
     {
         "name": "yellow",
