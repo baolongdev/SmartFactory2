@@ -1,4 +1,4 @@
-import { CAMERA_API_BASE } from "./helpers.js";
+import { CAMERA_API_BASE, PCLS_API_BASE, PCLS_COLOR_CODES } from "./helpers.js";
 import { sendUART, UART_CMD } from "./uart.js";
 import { cameraRunning } from "./camera_control.js";
 import { t } from "./i18n.js";
@@ -9,6 +9,25 @@ let conveyorRunning = false;
 let servoOpen       = false;
 let activeServoId   = 0;
 let stopTimer       = null;
+
+// ── PCLS notification (debounce 5s per color) ─────────────────────────────
+const _pclsLastSent = {};
+async function notifyPCLS(colorName) {
+    const colorCode = PCLS_COLOR_CODES[colorName];
+    if (!colorCode) return;
+    const now = Date.now();
+    if (_pclsLastSent[colorCode] && now - _pclsLastSent[colorCode] < 5000) return;
+    _pclsLastSent[colorCode] = now;
+    try {
+        await fetch(`${PCLS_API_BASE}/notify`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ color_code: colorCode, color_name: colorName }),
+        });
+    } catch (err) {
+        console.warn("[PCLS] Notify failed:", err);
+    }
+}
 
 /**
  * Poll detections và điều khiển băng tải + servo qua UART.
@@ -85,4 +104,7 @@ export async function pollDetections() {
         stopTimer = null;
         // Cycle sẽ tự resume (do pauseCycle đã set resumeTimer)
     }, duration);
+
+    // Notify PCLS (debounce 5s per color)
+    notifyPCLS(obj.name);
 }
