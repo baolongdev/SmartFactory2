@@ -41,11 +41,14 @@ const TRANSLATIONS = {
         "cam.stop":         "Dừng",
 
         // UART connection card
-        "uart.card.title":  "Kết nối UART",
-        "uart.card.status": "Trạng thái",
-        "uart.card.port":   "Cổng",
-        "uart.card.baud":   "Baud rate",
-        "uart.card.last":   "Lệnh cuối",
+        "uart.card.title":    "Kết nối UART",
+        "uart.card.status":   "Trạng thái",
+        "uart.card.port":     "Cổng",
+        "uart.card.baud":     "Baud rate",
+        "uart.card.last":     "Lệnh cuối",
+        "uart.card.conveyor": "Băng tải",
+        "uart.card.servo1":   "Servo 1",
+        "uart.card.servo2":   "Servo 2",
 
         // Detected objects card
         "det.title":        "Vật thể nhận diện",
@@ -118,11 +121,14 @@ const TRANSLATIONS = {
         "cam.stop":         "Stop",
 
         // UART connection card
-        "uart.card.title":  "UART Connection",
-        "uart.card.status": "Status",
-        "uart.card.port":   "Port",
-        "uart.card.baud":   "Baud rate",
-        "uart.card.last":   "Last command",
+        "uart.card.title":    "UART Connection",
+        "uart.card.status":   "Status",
+        "uart.card.port":     "Port",
+        "uart.card.baud":     "Baud rate",
+        "uart.card.last":     "Last command",
+        "uart.card.conveyor": "Conveyor",
+        "uart.card.servo1":   "Servo 1",
+        "uart.card.servo2":   "Servo 2",
 
         "det.title":        "Detected Objects",
         "det.empty":        "No objects detected",
@@ -188,11 +194,14 @@ const TRANSLATIONS = {
         "cam.stop":         "停止",
 
         // UART connection card
-        "uart.card.title":  "UART接続",
-        "uart.card.status": "状態",
-        "uart.card.port":   "ポート",
-        "uart.card.baud":   "ボーレート",
-        "uart.card.last":   "最後のコマンド",
+        "uart.card.title":    "UART接続",
+        "uart.card.status":   "状態",
+        "uart.card.port":     "ポート",
+        "uart.card.baud":     "ボーレート",
+        "uart.card.last":     "最後のコマンド",
+        "uart.card.conveyor": "ベルトコンベア",
+        "uart.card.servo1":   "サーボ1",
+        "uart.card.servo2":   "サーボ2",
 
         "det.title":        "検出オブジェクト",
         "det.empty":        "物体未検出",

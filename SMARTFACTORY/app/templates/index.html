@@ -420,9 +420,11 @@
         .sf-log-tx .sf-log-arrow { color: var(--primary); }
         /* RX arrows */
         .sf-log-rx .sf-log-arrow { color: var(--warning); }
-        /* TX content: RUN=green, STOP=muted */
-        .sf-log-run    { color: var(--success); font-weight: 600; }
+        /* TX content colours by command type */
+        .sf-log-run    { color: var(--success);     font-weight: 600; }
         .sf-log-stop   { color: var(--fg-subtle); }
+        .sf-log-servo  { color: var(--warning);     font-weight: 600; }
+        .sf-log-estop  { color: var(--destructive); font-weight: 700; }
         /* RX content */
         .sf-log-rx .sf-log-text { color: var(--warning); }
 
@@ -442,6 +444,14 @@
         }
         .uart-badge-connected { background: var(--success-muted); color: var(--success); border: 1px solid var(--success); }
         .uart-badge-offline   { background: var(--destructive-muted); color: var(--destructive); border: 1px solid var(--destructive); }
+        /* Device state badges */
+        .uart-state-badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 0.68rem; font-weight: 700; }
+        .uart-state-on    { background: var(--success-muted);     color: var(--success);     border: 1px solid var(--success); }
+        .uart-state-off   { background: var(--bg-muted);          color: var(--fg-subtle);   border: 1px solid var(--border); }
+        /* Device state grid */
+        .uart-state-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 4px; }
+        .uart-state-item  { display: flex; flex-direction: column; gap: 3px; }
+        .uart-state-label { font-size: 0.67rem; color: var(--fg-subtle); text-transform: uppercase; letter-spacing: 0.05em; }
 
         /* ═══════════════════════════════════════════════════════
            DETECTION COUNT BADGE
@@ -785,6 +795,7 @@
                     <span data-i18n="uart.card.title">UART Connection</span>
                 </div>
                 <div class="sf-card-body flex flex-col gap-2" id="uart-info-panel">
+                    <!-- Connection info -->
                     <div class="uart-info-row">
                         <span class="uart-info-label" data-i18n="uart.card.status">Trạng thái</span>
                         <span id="uart-conn-badge" class="uart-badge uart-badge-offline">
@@ -803,6 +814,22 @@
                     <div class="uart-info-row">
                         <span class="uart-info-label" data-i18n="uart.card.last">Lệnh cuối</span>
                         <span class="uart-info-value" id="uart-conn-last">—</span>
+                    </div>
+
+                    <!-- Device state -->
+                    <div class="uart-state-grid" style="border-top: 1px solid var(--border); padding-top:8px; margin-top:2px;">
+                        <div class="uart-state-item">
+                            <span class="uart-state-label" data-i18n="uart.card.conveyor">Băng tải</span>
+                            <span id="uart-state-conveyor" class="uart-state-badge uart-state-off">STOPPED</span>
+                        </div>
+                        <div class="uart-state-item">
+                            <span class="uart-state-label" data-i18n="uart.card.servo1">Servo 1</span>
+                            <span id="uart-state-servo1" class="uart-state-badge uart-state-off">CLOSED</span>
+                        </div>
+                        <div class="uart-state-item" style="grid-column: 1 / -1;">
+                            <span class="uart-state-label" data-i18n="uart.card.servo2">Servo 2</span>
+                            <span id="uart-state-servo2" class="uart-state-badge uart-state-off">CLOSED</span>
+                        </div>
                     </div>
                 </div>
             </div>

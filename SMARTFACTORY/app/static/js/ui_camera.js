@@ -33,11 +33,11 @@ export function initFullscreenButton() {
 }
 
 /* ================= Emergency Stop ================= */
-export function initEmergencyStop(sendMQTT) {
+export function initEmergencyStop(onStop) {
     window.emergencyStop = async function () {
         alert("🚨 Emergency Stop Triggered!");
-        if (sendMQTT) {
-            await sendMQTT("emergency", "STOP");
+        if (onStop) {
+            await onStop();
         }
     };
 }

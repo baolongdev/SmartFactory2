@@ -1,7 +1,7 @@
 // ======================== IMPORT MODULES ===========================
 import { switchCameraType, initFullscreenButton, initEmergencyStop, loadUSBCameras } from "./ui_camera.js";
 import { startCamera, stopCamera } from "./camera_control.js";
-import { pollUARTStatus } from "./uart.js";
+import { pollUARTStatus, emergencyStop } from "./uart.js";
 import { pollDetections } from "./detection.js";
 import {
     renderColorTable,
@@ -45,7 +45,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // --- UI Setup ---
     initFullscreenButton();
-    initEmergencyStop();
+    initEmergencyStop(emergencyStop);
 
     // ── Event listeners — không dùng onclick/onchange inline ──────────────
 
