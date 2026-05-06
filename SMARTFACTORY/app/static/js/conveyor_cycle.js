@@ -29,13 +29,20 @@ let _displayTimer = null;
 let _phaseStart   = 0;
 let _phaseDuration = 0;
 
+// ── External pause (detection takes priority) ──────────────────────────────
+let _pauseUntil      = 0;
+let _pauseResumeTimer = null;
+
 // ── Helpers ────────────────────────────────────────────────────────────────
 function _runMs()  { return Math.max(500, parseInt(document.getElementById("cycle-run-ms")?.value  || 3000, 10)); }
 function _stopMs() { return Math.max(500, parseInt(document.getElementById("cycle-stop-ms")?.value || 2000, 10)); }
 
+// ── Pause helper ───────────────────────────────────────────────────────────
+function _isPaused() { return Date.now() < _pauseUntil; }
+
 // ── Cycle engine ───────────────────────────────────────────────────────────
 async function _doRun() {
-    if (!_enabled) return;
+    if (!_enabled || _isPaused()) return;
     _phase        = "running";
     _phaseStart   = Date.now();
     _phaseDuration = _runMs();
@@ -45,7 +52,7 @@ async function _doRun() {
 }
 
 async function _doStop() {
-    if (!_enabled) return;
+    if (!_enabled || _isPaused()) return;
     _phase        = "stopped";
     _phaseStart   = Date.now();
     _phaseDuration = _stopMs();
@@ -86,6 +93,23 @@ function _updateUI() {
 }
 
 // ── Public API ─────────────────────────────────────────────────────────────
+
+/**
+ * Interrupt cycle for `ms` milliseconds so detection can control conveyor.
+ * Cancels the current phase timer; cycle resumes automatically after ms+100ms.
+ */
+export function pauseFor(ms) {
+    _pauseUntil = Date.now() + ms;
+    if (_phaseTimer) { clearTimeout(_phaseTimer); _phaseTimer = null; }
+    if (_pauseResumeTimer) { clearTimeout(_pauseResumeTimer); _pauseResumeTimer = null; }
+    if (_enabled) {
+        _pauseResumeTimer = setTimeout(() => {
+            _pauseResumeTimer = null;
+            if (_enabled) _doRun();
+        }, ms + 100);
+    }
+}
+
 export function startCycle() {
     if (_enabled) return;
     _enabled = true;

@@ -2,6 +2,7 @@ import { CAMERA_API_BASE, PCLS_API_BASE, PCLS_COLOR_CODES } from "./helpers.js";
 import { sendUART, UART_CMD } from "./uart.js";
 import { cameraRunning } from "./camera_control.js";
 import { t } from "./i18n.js";
+import { pauseFor as pauseCycle } from "./conveyor_cycle.js";
 
 // ── Conveyor + servo state ─────────────────────────────────────────────────
 // Chỉ gửi UART khi trạng thái thay đổi (tránh spam liên tục).
@@ -78,6 +79,10 @@ export async function pollDetections() {
     const obj      = data.detections[0];
     const duration = obj.duration_ms;
     const servoId  = obj.servo_id ?? 0;
+
+    // Interrupt conveyor cycle — nhường quyền điều khiển cho detection
+    // Cycle sẽ tự resume sau duration + 500ms buffer
+    pauseCycle(duration + 500);
 
     // Gửi lệnh chạy băng tải nếu chưa chạy
     if (!conveyorRunning) {
