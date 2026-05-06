@@ -17,7 +17,7 @@ Protocol (one ASCII digit + CRLF):
     3  →  servo 1 mở
     4  →  servo 2 đóng
     5  →  servo 2 mở
-    6  →  dừng khẩn cấp  (software shortcut: gửi 0 + 2 + 4 liên tiếp)
+    6  →  dừng khẩn cấp  (thiết bị tự xử lý: dừng băng tải + đóng servo 1 + đóng servo 2)
 
 Receive : bất kỳ dòng text nào ←  echo / status từ thiết bị
 """
@@ -42,9 +42,6 @@ COMMANDS = {
     5: "SERVO2_OPEN",
     6: "EMERGENCY_STOP",
 }
-
-# Command 6 expands to these sub-commands sent in sequence
-ESTOP_SEQUENCE = (0, 2, 4)
 
 # Fallback scan order when configured port is not available (Linux only)
 _LINUX_SCAN_PATTERNS = ["/dev/ttyACM*", "/dev/ttyUSB*"]
@@ -182,9 +179,7 @@ class UARTService:
     def send_command(self, command: int) -> bool:
         """
         Send a single command (0–5) over UART.
-
-        For emergency stop use emergency_stop() which sends 0+2+4 in sequence.
-        Sending command=6 here will be rejected — use the dedicated method.
+        For emergency stop use emergency_stop() which sends command 6.
 
         Args:
             command: 0–5  (see COMMANDS table)
@@ -203,26 +198,20 @@ class UARTService:
 
     def emergency_stop(self) -> bool:
         """
-        Emergency stop: send 0 (conveyor stop) + 2 (servo1 close) +
-        4 (servo2 close) in sequence with a 50 ms gap between each.
+        Emergency stop: send command 6 — device handles conveyor stop +
+        servo1 close + servo2 close internally.
 
-        Returns True if all three were sent successfully.
+        Returns True if sent successfully.
         """
         logger.warning("uart_emergency_stop_triggered")
-        results = []
-        for cmd in ESTOP_SEQUENCE:
-            ok = self._write(cmd)
-            self._update_state(cmd)
-            results.append(ok)
-            time.sleep(0.05)   # 50 ms gap — let device process each command
-
-        self._last_command = 6
-        all_ok = all(results)
-        if all_ok:
+        ok = self._write(6)
+        if ok:
+            self._last_command = 6
+            self._update_state(6)
             logger.warning("uart_emergency_stop_sent")
         else:
-            logger.error("uart_emergency_stop_partial", results=results)
-        return all_ok
+            logger.error("uart_emergency_stop_failed")
+        return ok
 
     # ── Public API ────────────────────────────────────────────────────────────
 

@@ -8,7 +8,7 @@ Protocol (one ASCII digit + CRLF sent to device):
     3  →  servo 1 mở
     4  →  servo 2 đóng
     5  →  servo 2 mở
-    6  →  dừng khẩn cấp (gửi 0 + 2 + 4 liên tiếp)
+    6  →  dừng khẩn cấp (thiết bị tự xử lý: dừng băng tải + đóng cả 2 servo)
 
 Endpoints:
     POST /api/uart/command   {"command": 0–5}  — gửi lệnh đơn
@@ -75,16 +75,16 @@ def uart_command():
 @api_uart.post("/estop")
 def uart_estop():
     """
-    Dừng khẩn cấp: gửi 0 (conveyor stop) + 2 (servo1 close) + 4 (servo2 close).
+    Dừng khẩn cấp: gửi lệnh 6 — thiết bị tự dừng băng tải + đóng servo 1 + servo 2.
 
     Returns:
-        {"status": "success", "sequence": [0, 2, 4]}
+        {"status": "success", "command": 6}
         {"status": "error",   "message": "UART not connected"} (503)
     """
     ok = uart_service.emergency_stop()
     if ok:
-        return jsonify({"status": "success", "sequence": [0, 2, 4]})
-    return jsonify({"status": "error", "message": "UART not connected or partial failure"}), 503
+        return jsonify({"status": "success", "command": 6})
+    return jsonify({"status": "error", "message": "UART not connected"}), 503
 
 
 # ---------------------------------------------------------------------------
