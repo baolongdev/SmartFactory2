@@ -397,11 +397,8 @@
             transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
             -webkit-appearance: none; -moz-appearance: none; appearance: none;
         }
-        /* All inputs/selects fill their fixed column */
-        .color-name    { width: 100%; }
-        .color-action  { width: 100%; text-align: center; }
-        .color-duration { width: 100%; text-align: right; }
-        .color-servo   { width: 100%; }
+        .color-action  { text-align: center; }
+        .color-duration { text-align: right; }
 
         .color-name:hover, .color-action:hover, .color-duration:hover, .color-servo:hover {
             border-color: var(--border);
@@ -865,15 +862,7 @@
                 </div>
                 <div class="p-0">
                     <div class="overflow-y-auto overflow-x-auto" style="max-height:155px;">
-                        <table id="color-config-table" class="text-xs"
-                               style="width:100%; min-width:360px; table-layout:fixed;">
-                            <colgroup>
-                                <col style="width:32%;">  <!-- Color   -->
-                                <col style="width:15%;">  <!-- Action  -->
-                                <col style="width:18%;">  <!-- ms      -->
-                                <col style="width:25%;">  <!-- Servo   -->
-                                <col style="width:10%;">  <!-- Delete  -->
-                            </colgroup>
+                        <table id="color-config-table" class="text-xs" style="width:100%;">
                             <thead class="sticky top-0 z-10" style="background:var(--bg-subtle);">
                                 <tr style="border-bottom:1px solid var(--border);">
                                     <th class="text-left px-3 py-2 font-semibold uppercase tracking-wider"
