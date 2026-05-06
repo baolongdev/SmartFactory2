@@ -451,10 +451,11 @@
         .uart-state-badge { display: inline-block; padding: 2px 8px; border-radius: 99px; font-size: 0.68rem; font-weight: 700; }
         .uart-state-on    { background: var(--success-muted);     color: var(--success);     border: 1px solid var(--success); }
         .uart-state-off   { background: var(--bg-muted);          color: var(--fg-subtle);   border: 1px solid var(--border); }
-        /* Device state grid */
-        .uart-state-grid  { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; padding-top: 4px; }
-        .uart-state-item  { display: flex; flex-direction: column; gap: 3px; }
-        .uart-state-label { font-size: 0.67rem; color: var(--fg-subtle); text-transform: uppercase; letter-spacing: 0.05em; }
+        /* Device state list */
+        .uart-state-grid  { display: flex; flex-direction: column; gap: 0; padding-top: 4px; }
+        .uart-state-item  { display: flex; align-items: center; justify-content: space-between; padding: 5px 0; border-bottom: 1px solid var(--border); }
+        .uart-state-item:last-child { border-bottom: none; }
+        .uart-state-label { font-size: 0.72rem; color: var(--fg-subtle); }
 
         /* ═══════════════════════════════════════════════════════
            DETECTION COUNT BADGE
@@ -831,7 +832,7 @@
                             <span class="uart-state-label" data-i18n="uart.card.servo1">Servo 1</span>
                             <span id="uart-state-servo1" class="uart-state-badge uart-state-off">CLOSED</span>
                         </div>
-                        <div class="uart-state-item" style="grid-column: 1 / -1;">
+                        <div class="uart-state-item">
                             <span class="uart-state-label" data-i18n="uart.card.servo2">Servo 2</span>
                             <span id="uart-state-servo2" class="uart-state-badge uart-state-off">CLOSED</span>
                         </div>
