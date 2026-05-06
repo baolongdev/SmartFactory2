@@ -11,9 +11,25 @@ import {
     getColorHex,
 } from "./colors.js";
 import { applyI18n, setLang, t } from "./i18n.js";
+import { getPollMs, initPollSettings } from "./poll_settings.js";
 
 // Expose t() so the inline theme toggle script can resolve i18n titles
 window.__sf_i18n_t = t;
+
+// ── Polling timer handles (module-level so restarters can clear them) ──────
+let _uartTimer   = null;
+let _detectTimer = null;   // null = camera not yet started
+
+function _restartUart(ms) {
+    clearInterval(_uartTimer);
+    _uartTimer = setInterval(pollUARTStatus, ms);
+}
+
+function _restartDetect(ms) {
+    if (_detectTimer === null) return;   // camera not started yet — skip
+    clearInterval(_detectTimer);
+    _detectTimer = setInterval(pollDetections, ms);
+}
 
 // (Color hex map lives in colors.js — imported as getColorHex above)
 
@@ -117,7 +133,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     await loadUSBCameras();
     pollUARTStatus();
     await renderColorTable();
-    setInterval(pollUARTStatus, 5000);
+    _restartUart(getPollMs("uart"));
+
+    // Wire poll-interval inputs → restart timers on change
+    initPollSettings({ onUart: _restartUart, onDetect: _restartDetect });
 
     // ── Camera auto-start ─────────────────────────────────────────────────
     switchCameraType();
@@ -128,5 +147,5 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    setInterval(pollDetections, 1000);
+    _detectTimer = setInterval(pollDetections, getPollMs("detect"));
 });

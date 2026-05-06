@@ -50,6 +50,9 @@ const TRANSLATIONS = {
         "uart.card.servo1":   "Servo 1",
         "uart.card.servo2":   "Servo 2",
 
+        // Poll interval
+        "poll.interval":    "Tần suất",
+
         // Detected objects card
         "det.title":        "Vật thể nhận diện",
         "det.empty":        "Chưa phát hiện vật thể",
@@ -141,6 +144,8 @@ const TRANSLATIONS = {
         "uart.card.servo1":   "Servo 1",
         "uart.card.servo2":   "Servo 2",
 
+        "poll.interval":    "Poll interval",
+
         "det.title":        "Detected Objects",
         "det.empty":        "No objects detected",
 
@@ -224,6 +229,8 @@ const TRANSLATIONS = {
         "uart.card.conveyor": "ベルトコンベア",
         "uart.card.servo1":   "サーボ1",
         "uart.card.servo2":   "サーボ2",
+
+        "poll.interval":    "更新間隔",
 
         "det.title":        "検出オブジェクト",
         "det.empty":        "物体未検出",

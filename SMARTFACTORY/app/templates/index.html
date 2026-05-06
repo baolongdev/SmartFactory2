@@ -857,6 +857,13 @@
                         <span class="sf-kv-label" data-i18n="uart.card.servo2">Servo 2</span>
                         <span id="uart-state-servo2" class="uart-state-badge uart-state-off">CLOSED</span>
                     </div>
+                    <div class="sf-kv-row sf-kv-group">
+                        <span class="sf-kv-label" data-i18n="poll.interval">Tần suất</span>
+                        <span style="display:flex;align-items:center;gap:4px;">
+                            <input id="poll-uart-ms" type="number" class="cycle-input" value="5000" min="1000" max="30000" step="1000">
+                            <span class="cycle-unit">ms</span>
+                        </span>
+                    </div>
                 </div>
             </div>
 
@@ -867,6 +874,13 @@
                     <span data-i18n="det.title">Detected Objects</span>
                     <span id="detection-count"
                           class="ml-auto text-xs font-bold px-2 py-0.5 rounded-full count-badge">0</span>
+                </div>
+                <div class="sf-kv-row">
+                    <span class="sf-kv-label" data-i18n="poll.interval">Tần suất</span>
+                    <span style="display:flex;align-items:center;gap:4px;">
+                        <input id="poll-detect-ms" type="number" class="cycle-input" value="1000" min="500" max="10000" step="500">
+                        <span class="cycle-unit">ms</span>
+                    </span>
                 </div>
                 <ul id="detected-list" class="overflow-y-auto" style="max-height:120px;">
                     <li class="sf-placeholder sf-empty" data-i18n="det.empty">No objects detected</li>
