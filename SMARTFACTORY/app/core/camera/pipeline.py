@@ -61,8 +61,8 @@ class CameraPipeline:
                 c["lower"],
                 c["upper"],
                 c["bgr"],
-                c["action_id"],
-                c["duration_ms"]
+                c["duration_ms"],
+                c.get("servo_id", 0),
             )
             for c in color_cfg.colors
         ]

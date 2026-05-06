@@ -53,10 +53,9 @@ export function getColorHex(name) {
    BUILD TABLE ROW
    ============================================================ */
 export function buildColorRow(color) {
-    const name = color.name || "red";
-    const action = color.action_id ?? 0;
+    const name     = color.name || "red";
     const duration = color.duration_ms ?? 1000;
-    const servoId = color.servo_id ?? 0;
+    const servoId  = color.servo_id ?? 0;
 
     const colorOptions = [
         "red", "green", "blue",
@@ -86,10 +85,7 @@ export function buildColorRow(color) {
                 </div>
             </td>
             <td>
-                <input type="number" class="color-action" value="${action}" min="1" max="10">
-            </td>
-            <td>
-                <input type="number" class="color-duration" value="${duration}" min="500" max="10000">
+                <input type="number" class="color-duration" value="${duration}" min="500" max="30000">
             </td>
             <td>
                 <select class="color-servo">
@@ -114,7 +110,7 @@ export async function renderColorTable() {
     const list = await loadColorConfig();
 
     if (!list.length) {
-        table.innerHTML = `<tr><td colspan="5" class="px-3 py-4 text-center sf-empty">${t('color.empty')}</td></tr>`;
+        table.innerHTML = `<tr><td colspan="4" class="px-3 py-4 text-center sf-empty">${t('color.empty')}</td></tr>`;
         return;
     }
 
@@ -130,13 +126,11 @@ export async function saveColorConfig() {
 
     rows.forEach(row => {
         const name     = row.querySelector(".color-name").value;
-        const action   = parseInt(row.querySelector(".color-action").value, 10);
         const duration = parseInt(row.querySelector(".color-duration").value, 10);
         const servo    = parseInt(row.querySelector(".color-servo").value, 10);
 
         colors.push({
             name,
-            action_id:   isNaN(action)   ? 0    : action,
             duration_ms: isNaN(duration) ? 1000 : duration,
             servo_id:    isNaN(servo)    ? 0    : servo,
         });
@@ -158,10 +152,6 @@ export function addNewColorRow() {
     const table = document.getElementById("color-table-body");
     table.insertAdjacentHTML(
         "beforeend",
-        buildColorRow({
-            name: "red",
-            action_id: 0,
-            duration_ms: 1000
-        })
+        buildColorRow({ name: "red", duration_ms: 1000, servo_id: 0 })
     );
 }

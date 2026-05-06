@@ -1,72 +1,15 @@
 import os
 import json
-from .validator import ConfigValidator
 
 class ColorConfig:
     DEFAULT = [
-        {
-            "name": "red",
-            "bgr": [0, 0, 255],
-            "lower": [0, 100, 80],
-            "upper": [10, 255, 255],
-            "action_id": 3,
-            "duration_ms": 8000,
-            "servo_id": 0,
-        },
-        {
-            "name": "orange",
-            "bgr": [0, 165, 255],
-            "lower": [10, 100, 100],
-            "upper": [20, 255, 255],
-            "action_id": 5,
-            "duration_ms": 5000,
-            "servo_id": 0,
-        },
-        {
-            "name": "yellow",
-            "bgr": [0, 255, 255],
-            "lower": [22, 100, 100],
-            "upper": [33, 255, 255],
-            "action_id": 4,
-            "duration_ms": 5000,
-            "servo_id": 0,
-        },
-        {
-            "name": "green",
-            "bgr": [0, 255, 0],
-            "lower": [35, 80, 80],
-            "upper": [85, 255, 255],
-            "action_id": 2,
-            "duration_ms": 6000,
-            "servo_id": 0,
-        },
-        {
-            "name": "blue",
-            "bgr": [255, 0, 0],
-            "lower": [90, 70, 70],
-            "upper": [130, 255, 255],
-            "action_id": 1,
-            "duration_ms": 4000,
-            "servo_id": 0,
-        },
-        {
-            "name": "purple",
-            "bgr": [255, 0, 255],
-            "lower": [135, 60, 60],
-            "upper": [155, 255, 255],
-            "action_id": 6,
-            "duration_ms": 6000,
-            "servo_id": 0,
-        },
-        {
-            "name": "pink",
-            "bgr": [203, 192, 255],
-            "lower": [155, 70, 100],
-            "upper": [175, 255, 255],
-            "action_id": 7,
-            "duration_ms": 7000,
-            "servo_id": 0,
-        },
+        { "name": "red",    "bgr": [0, 0, 255],     "lower": [0, 100, 80],    "upper": [10, 255, 255],  "duration_ms": 1000, "servo_id": 1 },
+        { "name": "orange", "bgr": [0, 165, 255],   "lower": [10, 100, 100],  "upper": [20, 255, 255],  "duration_ms": 2000, "servo_id": 0 },
+        { "name": "yellow", "bgr": [0, 255, 255],   "lower": [22, 100, 100],  "upper": [33, 255, 255],  "duration_ms": 3000, "servo_id": 0 },
+        { "name": "green",  "bgr": [0, 255, 0],     "lower": [35, 80, 80],    "upper": [85, 255, 255],  "duration_ms": 2000, "servo_id": 0 },
+        { "name": "blue",   "bgr": [255, 0, 0],     "lower": [90, 70, 70],    "upper": [130, 255, 255], "duration_ms": 2000, "servo_id": 2 },
+        { "name": "purple", "bgr": [255, 0, 255],   "lower": [135, 60, 60],   "upper": [155, 255, 255], "duration_ms": 2000, "servo_id": 0 },
+        { "name": "pink",   "bgr": [203, 192, 255], "lower": [155, 70, 100],  "upper": [175, 255, 255], "duration_ms": 2000, "servo_id": 0 },
     ]
 
     def __init__(self, path="config/colors.json"):
@@ -74,43 +17,31 @@ class ColorConfig:
         self.colors = self._load_colors()
         self.colors = self._fill_missing_fields(self.colors)
 
-    # Load FE JSON (may be missing HSV)
     def _load_colors(self):
         if not os.path.exists(self.path):
             os.makedirs(os.path.dirname(self.path), exist_ok=True)
             with open(self.path, "w") as f:
                 json.dump(self.DEFAULT, f, indent=4)
             return self.DEFAULT
-
         with open(self.path, "r") as f:
             return json.load(f)
-        
+
     def reload(self):
-        """Reload từ file & fill lại missing fields."""
         self.colors = self._fill_missing_fields(self._load_colors())
 
-
     def _fill_missing_fields(self, list_in):
-        """
-        Merge user config with defaults.
-        User values always win; defaults fill only missing fields.
-        This allows tuning HSV thresholds and BGR display colour
-        directly from colors.json without touching code.
-        """
         output = []
         for item in list_in:
             base = next((d for d in self.DEFAULT if d["name"] == item["name"]), None)
             if not base:
                 continue
-
             merged = {
                 "name":        item["name"],
                 "bgr":         item.get("bgr",         base["bgr"]),
                 "lower":       item.get("lower",       base["lower"]),
                 "upper":       item.get("upper",       base["upper"]),
-                "action_id":   item.get("action_id",   base["action_id"]),
                 "duration_ms": item.get("duration_ms", base["duration_ms"]),
-                "servo_id":    item.get("servo_id",    base.get("servo_id", 0)),
+                "servo_id":    item.get("servo_id",    base["servo_id"]),
             }
             output.append(merged)
         return output

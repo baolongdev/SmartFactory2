@@ -60,7 +60,6 @@ const TRANSLATIONS = {
         // Color config card
         "color.title":      "Cấu hình màu sắc",
         "color.col":        "Màu",
-        "color.action":     "Hành động",
         "color.ms":         "ms",
         "color.servo":      "Servo",
         "color.add":        "Thêm",
@@ -151,7 +150,6 @@ const TRANSLATIONS = {
 
         "color.title":      "Color Configuration",
         "color.col":        "Color",
-        "color.action":     "Action",
         "color.ms":         "ms",
         "color.servo":      "Servo",
         "color.add":        "Add",
@@ -237,7 +235,6 @@ const TRANSLATIONS = {
 
         "color.title":      "色設定",
         "color.col":        "色",
-        "color.action":     "アクション",
         "color.ms":         "ms",
         "color.servo":      "サーボ",
         "color.add":        "追加",

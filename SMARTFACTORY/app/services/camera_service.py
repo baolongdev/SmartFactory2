@@ -300,7 +300,6 @@ class CameraService:
         detections: List[Dict[str, Any]] = []
 
         for o in raw_objs:
-            # Case 1: Pipeline returns dict (standard path after our pipeline update)
             if isinstance(o, dict):
                 detections.append({
                     "x":          o.get("x", 0),
@@ -309,13 +308,10 @@ class CameraService:
                     "h":          o.get("h", 0),
                     "name":       o.get("color_name") or o.get("name", "unknown"),
                     "bgr":        list(o.get("bgr", (255, 255, 255))),
-                    "action_id":  o.get("action_id", 0),
                     "duration_ms": o.get("duration_ms", 1000),
                     "servo_id":   o.get("servo_id", 0),
                     "tracker_id": o.get("tracker_id"),
                 })
-
-            # Case 2: Pipeline returns ColorObject instance
             elif hasattr(o, "name"):
                 detections.append({
                     "x":          getattr(o, "x", 0),
@@ -324,22 +320,15 @@ class CameraService:
                     "h":          getattr(o, "h", 0),
                     "name":       getattr(o, "name", "unknown"),
                     "bgr":        list(getattr(o, "bgr", (255, 255, 255))),
-                    "action_id":  getattr(o, "action_id", 0),
                     "duration_ms": getattr(o, "duration_ms", 1000),
                     "servo_id":   getattr(o, "servo_id", 0),
                     "tracker_id": getattr(o, "tracker_id", None),
                 })
-
-            # Case 3: Fallback
             else:
                 detections.append({
                     "x": 0, "y": 0, "w": 0, "h": 0,
-                    "name": "unknown",
-                    "bgr": [200, 200, 200],
-                    "action_id": 0,
-                    "duration_ms": 1000,
-                    "servo_id": 0,
-                    "tracker_id": None,
+                    "name": "unknown", "bgr": [200, 200, 200],
+                    "duration_ms": 1000, "servo_id": 0, "tracker_id": None,
                 })
 
         return detections
@@ -401,7 +390,6 @@ class CameraService:
                 c["lower"],
                 c["upper"],
                 c["bgr"],
-                c["action_id"],
                 c["duration_ms"],
                 c.get("servo_id", 0),
             )

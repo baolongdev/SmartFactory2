@@ -1,20 +1,17 @@
 [
     {
         "name": "red",
-        "action_id": 1,
-        "duration_ms": 4000,
+        "duration_ms": 1000,
         "servo_id": 1
     },
     {
         "name": "blue",
-        "action_id": 2,
-        "duration_ms": 6000,
+        "duration_ms": 2000,
         "servo_id": 2
     },
     {
         "name": "yellow",
-        "action_id": 3,
-        "duration_ms": 8000,
+        "duration_ms": 3000,
         "servo_id": 0
     }
 ]

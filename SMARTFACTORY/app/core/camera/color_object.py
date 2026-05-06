@@ -3,66 +3,37 @@ import numpy as np
 
 class ColorObject:
     """
-    Model đại diện cho một màu cần detect.
-
-    Bao gồm:
-        - name (str)
-        - lower (np.array)
-        - upper (np.array)
-        - bgr (tuple)
-        - action_id (int) → cho conveyor
-        - duration_ms (int) → thời gian chạy conveyor
-
-        Thuộc tính runtime (cập nhật khi detect):
-        - x, y, w, h: bounding box
+    Đại diện cho một màu cần detect.
+    - name, lower/upper (HSV), bgr: định nghĩa màu
+    - duration_ms: thời gian chạy conveyor khi phát hiện
+    - servo_id: 0=none, 1=servo1, 2=servo2
+    - x, y, w, h: bounding box (runtime)
     """
 
-    def __init__(self, name, lower, upper, bgr, action_id=0, duration_ms=3000, servo_id=0):
-        self.name = name
-
-        # Convert HSV to numpy arrays
-        self.lower = np.array(lower, dtype=np.uint8)
-        self.upper = np.array(upper, dtype=np.uint8)
-
-        # Drawing color (BGR)
-        self.bgr = tuple(int(c) for c in bgr)
-
-        # Conveyor metadata
-        self.action_id = int(action_id)
+    def __init__(self, name, lower, upper, bgr, duration_ms=1000, servo_id=0):
+        self.name        = name
+        self.lower       = np.array(lower, dtype=np.uint8)
+        self.upper       = np.array(upper, dtype=np.uint8)
+        self.bgr         = tuple(int(c) for c in bgr)
         self.duration_ms = int(duration_ms)
-        # 0=none, 1=servo1, 2=servo2
-        self.servo_id = int(servo_id)
-
-        # Detection runtime attributes
-        self.x = 0
-        self.y = 0
-        self.w = 0
-        self.h = 0
-
-    # ----------------------------------------------------------------------
+        self.servo_id    = int(servo_id)
+        self.x = self.y = self.w = self.h = 0
 
     def to_dict(self):
-        """
-        Chuẩn hoá dữ liệu trả về cho FE hoặc logging.
-        Dùng đồng nhất trong CameraPipeline.
-        """
         return {
-            "color_name": self.name,
-            "bgr": list(self.bgr),
-            "x": self.x,
-            "y": self.y,
-            "w": self.w,
-            "h": self.h,
-            "action_id": self.action_id,
+            "color_name":  self.name,
+            "bgr":         list(self.bgr),
+            "x":           self.x,
+            "y":           self.y,
+            "w":           self.w,
+            "h":           self.h,
             "duration_ms": self.duration_ms,
-            "servo_id": self.servo_id,
+            "servo_id":    self.servo_id,
         }
-
-    # ----------------------------------------------------------------------
 
     def __repr__(self):
         return (
             f"<ColorObject name={self.name}, "
             f"HSV={self.lower.tolist()}-{self.upper.tolist()}, "
-            f"BGR={self.bgr}, action_id={self.action_id}, duration={self.duration_ms}ms>"
+            f"BGR={self.bgr}, duration={self.duration_ms}ms, servo={self.servo_id}>"
         )
