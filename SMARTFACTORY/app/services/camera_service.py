@@ -311,7 +311,8 @@ class CameraService:
                     "bgr":        list(o.get("bgr", (255, 255, 255))),
                     "action_id":  o.get("action_id", 0),
                     "duration_ms": o.get("duration_ms", 1000),
-                    "tracker_id": o.get("tracker_id"),   # unique object ID from Tracker
+                    "servo_id":   o.get("servo_id", 0),
+                    "tracker_id": o.get("tracker_id"),
                 })
 
             # Case 2: Pipeline returns ColorObject instance
@@ -325,6 +326,7 @@ class CameraService:
                     "bgr":        list(getattr(o, "bgr", (255, 255, 255))),
                     "action_id":  getattr(o, "action_id", 0),
                     "duration_ms": getattr(o, "duration_ms", 1000),
+                    "servo_id":   getattr(o, "servo_id", 0),
                     "tracker_id": getattr(o, "tracker_id", None),
                 })
 
@@ -336,6 +338,7 @@ class CameraService:
                     "bgr": [200, 200, 200],
                     "action_id": 0,
                     "duration_ms": 1000,
+                    "servo_id": 0,
                     "tracker_id": None,
                 })
 
@@ -400,6 +403,7 @@ class CameraService:
                 c["bgr"],
                 c["action_id"],
                 c["duration_ms"],
+                c.get("servo_id", 0),
             )
             for c in colors
         ]

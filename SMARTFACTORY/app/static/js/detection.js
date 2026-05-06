@@ -1,12 +1,14 @@
 import { CAMERA_API_BASE, PCLS_API_BASE, PCLS_COLOR_CODES } from "./helpers.js";
-import { sendUART } from "./uart.js";
+import { sendUART, UART_CMD } from "./uart.js";
 import { cameraRunning } from "./camera_control.js";
 import { t } from "./i18n.js";
 
-// ── Conveyor state ─────────────────────────────────────────────────────────
-// Chỉ gửi UART khi trạng thái thay đổi (tránh spam 0/1 liên tục).
+// ── Conveyor + servo state ─────────────────────────────────────────────────
+// Chỉ gửi UART khi trạng thái thay đổi (tránh spam liên tục).
 let conveyorRunning = false;   // băng tải đang chạy?
-let stopTimer       = null;    // timer gửi "0" sau duration_ms
+let servoOpen       = false;   // servo đang mở?
+let activeServoId   = 0;       // servo nào đang mở (1 hoặc 2)
+let stopTimer       = null;    // timer dừng sau duration_ms
 
 // ── PCLS debounce ──────────────────────────────────────────────────────────
 const PCLS_COOLDOWN = 5000;
@@ -71,21 +73,37 @@ export async function pollDetections() {
         `;
     }).join("");
 
-    // ── Điều khiển băng tải ────────────────────────────────────────────────
+    // ── Điều khiển băng tải + servo ───────────────────────────────────────
     // Dùng object đầu tiên (max_objects=1 nên chỉ có 1)
     const obj      = data.detections[0];
     const duration = obj.duration_ms;
+    const servoId  = obj.servo_id ?? 0;
 
-    // Gửi 1 nếu băng tải chưa chạy
+    // Gửi lệnh chạy băng tải nếu chưa chạy
     if (!conveyorRunning) {
-        await sendUART(1);
+        await sendUART(UART_CMD.CONVEYOR_RUN);
         conveyorRunning = true;
+    }
+
+    // Mở servo nếu chưa mở (servo_id 1 hoặc 2)
+    if (servoId > 0 && !servoOpen) {
+        const openCmd = servoId === 1 ? UART_CMD.SERVO1_OPEN : UART_CMD.SERVO2_OPEN;
+        await sendUART(openCmd);
+        servoOpen     = true;
+        activeServoId = servoId;
     }
 
     // Reset timer dừng — mỗi lần detect thành công kéo dài thêm duration_ms
     if (stopTimer) clearTimeout(stopTimer);
     stopTimer = setTimeout(async () => {
-        await sendUART(0);
+        // Đóng servo trước khi dừng băng tải
+        if (servoOpen) {
+            const closeCmd = activeServoId === 1 ? UART_CMD.SERVO1_CLOSE : UART_CMD.SERVO2_CLOSE;
+            await sendUART(closeCmd);
+            servoOpen     = false;
+            activeServoId = 0;
+        }
+        await sendUART(UART_CMD.CONVEYOR_STOP);
         conveyorRunning = false;
         stopTimer = null;
     }, duration);

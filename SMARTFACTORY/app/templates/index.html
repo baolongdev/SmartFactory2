@@ -389,7 +389,7 @@
         #color-table-body tr:last-child td { border-bottom: none; }
         .color-row { transition: background 0.12s; }
         .color-row:hover { background: var(--bg-muted); }
-        .color-name, .color-action, .color-duration {
+        .color-name, .color-action, .color-duration, .color-servo {
             background: transparent; color: var(--fg);
             border: 1px solid transparent; border-radius: 4px;
             outline: none; font-size: 0.78rem; font-family: inherit;
@@ -585,9 +585,11 @@
             #detected-list  { max-height: 110px !important; }
             #uart-log       { max-height: 110px !important; }
 
-            /* Color table: hide "ms" column */
+            /* Color table: hide "ms" and "servo" columns */
             #color-table-body td:nth-child(3),
-            #color-table-body thead th:nth-child(3) { display: none; }
+            #color-table-body thead th:nth-child(3),
+            #color-table-body td:nth-child(4),
+            #color-table-body thead th:nth-child(4) { display: none; }
         }
 
         /* ── Very small  < 400px ─────────────────────────────── */
@@ -869,12 +871,15 @@
                                     <th class="text-left px-3 py-2 font-semibold uppercase tracking-wider"
                                         style="color:var(--fg-muted);"
                                         data-i18n="color.ms">ms</th>
+                                    <th class="text-left px-3 py-2 font-semibold uppercase tracking-wider"
+                                        style="color:var(--fg-muted);"
+                                        data-i18n="color.servo">Servo</th>
                                     <th class="px-3 py-2"></th>
                                 </tr>
                             </thead>
                             <tbody id="color-table-body">
                                 <tr>
-                                    <td colspan="4" class="px-3 py-4 text-center sf-empty"
+                                    <td colspan="5" class="px-3 py-4 text-center sf-empty"
                                         data-i18n="color.loading">Loading...</td>
                                 </tr>
                             </tbody>

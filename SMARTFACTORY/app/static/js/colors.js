@@ -56,8 +56,9 @@ export function buildColorRow(color) {
     const name = color.name || "red";
     const action = color.action_id ?? 0;
     const duration = color.duration_ms ?? 1000;
+    const servoId = color.servo_id ?? 0;
 
-    const options = [
+    const colorOptions = [
         "red", "green", "blue",
         "yellow", "orange", "purple", "pink"
     ].map(m =>
@@ -66,13 +67,21 @@ export function buildColorRow(color) {
         </option>`
     ).join("");
 
+    const servoOptions = [
+        { value: 0, label: "—" },
+        { value: 1, label: "Servo 1" },
+        { value: 2, label: "Servo 2" },
+    ].map(({ value, label }) =>
+        `<option value="${value}" ${servoId === value ? "selected" : ""}>${label}</option>`
+    ).join("");
+
     return `
         <tr class="color-row">
             <td>
                 <div class="flex items-center gap-2">
                     <span class="color-dot" style="background:${getColorHex(name)}"></span>
                     <select class="color-name">
-                        ${options}
+                        ${colorOptions}
                     </select>
                 </div>
             </td>
@@ -81,6 +90,11 @@ export function buildColorRow(color) {
             </td>
             <td>
                 <input type="number" class="color-duration" value="${duration}" min="500" max="10000">
+            </td>
+            <td>
+                <select class="color-servo">
+                    ${servoOptions}
+                </select>
             </td>
             <td style="text-align:center; width:40px;">
                 <button style="background:var(--destructive-muted);color:var(--destructive);border:1px solid var(--destructive);border-radius:var(--radius);width:26px;height:26px;cursor:pointer;font-size:0.7rem;"
@@ -100,7 +114,7 @@ export async function renderColorTable() {
     const list = await loadColorConfig();
 
     if (!list.length) {
-        table.innerHTML = `<tr><td colspan="4" class="px-3 py-4 text-center sf-empty">${t('color.empty')}</td></tr>`;
+        table.innerHTML = `<tr><td colspan="5" class="px-3 py-4 text-center sf-empty">${t('color.empty')}</td></tr>`;
         return;
     }
 
@@ -115,14 +129,16 @@ export async function saveColorConfig() {
     const colors = [];
 
     rows.forEach(row => {
-        const name = row.querySelector(".color-name").value;
-        const action = parseInt(row.querySelector(".color-action").value, 10);
+        const name     = row.querySelector(".color-name").value;
+        const action   = parseInt(row.querySelector(".color-action").value, 10);
         const duration = parseInt(row.querySelector(".color-duration").value, 10);
+        const servo    = parseInt(row.querySelector(".color-servo").value, 10);
 
         colors.push({
             name,
-            action_id: isNaN(action) ? 0 : action,
+            action_id:   isNaN(action)   ? 0    : action,
             duration_ms: isNaN(duration) ? 1000 : duration,
+            servo_id:    isNaN(servo)    ? 0    : servo,
         });
     });
 

@@ -17,7 +17,7 @@ class ColorObject:
         - x, y, w, h: bounding box
     """
 
-    def __init__(self, name, lower, upper, bgr, action_id=0, duration_ms=3000):
+    def __init__(self, name, lower, upper, bgr, action_id=0, duration_ms=3000, servo_id=0):
         self.name = name
 
         # Convert HSV to numpy arrays
@@ -30,6 +30,8 @@ class ColorObject:
         # Conveyor metadata
         self.action_id = int(action_id)
         self.duration_ms = int(duration_ms)
+        # 0=none, 1=servo1, 2=servo2
+        self.servo_id = int(servo_id)
 
         # Detection runtime attributes
         self.x = 0
@@ -52,7 +54,8 @@ class ColorObject:
             "w": self.w,
             "h": self.h,
             "action_id": self.action_id,
-            "duration_ms": self.duration_ms
+            "duration_ms": self.duration_ms,
+            "servo_id": self.servo_id,
         }
 
     # ----------------------------------------------------------------------

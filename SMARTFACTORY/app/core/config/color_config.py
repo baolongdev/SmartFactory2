@@ -10,7 +10,8 @@ class ColorConfig:
             "lower": [0, 100, 80],
             "upper": [10, 255, 255],
             "action_id": 3,
-            "duration_ms": 8000
+            "duration_ms": 8000,
+            "servo_id": 0,
         },
         {
             "name": "orange",
@@ -18,7 +19,8 @@ class ColorConfig:
             "lower": [10, 100, 100],
             "upper": [20, 255, 255],
             "action_id": 5,
-            "duration_ms": 5000
+            "duration_ms": 5000,
+            "servo_id": 0,
         },
         {
             "name": "yellow",
@@ -26,7 +28,8 @@ class ColorConfig:
             "lower": [22, 100, 100],
             "upper": [33, 255, 255],
             "action_id": 4,
-            "duration_ms": 5000
+            "duration_ms": 5000,
+            "servo_id": 0,
         },
         {
             "name": "green",
@@ -34,7 +37,8 @@ class ColorConfig:
             "lower": [35, 80, 80],
             "upper": [85, 255, 255],
             "action_id": 2,
-            "duration_ms": 6000
+            "duration_ms": 6000,
+            "servo_id": 0,
         },
         {
             "name": "blue",
@@ -42,7 +46,8 @@ class ColorConfig:
             "lower": [90, 70, 70],
             "upper": [130, 255, 255],
             "action_id": 1,
-            "duration_ms": 4000
+            "duration_ms": 4000,
+            "servo_id": 0,
         },
         {
             "name": "purple",
@@ -50,7 +55,8 @@ class ColorConfig:
             "lower": [135, 60, 60],
             "upper": [155, 255, 255],
             "action_id": 6,
-            "duration_ms": 6000
+            "duration_ms": 6000,
+            "servo_id": 0,
         },
         {
             "name": "pink",
@@ -58,8 +64,9 @@ class ColorConfig:
             "lower": [155, 70, 100],
             "upper": [175, 255, 255],
             "action_id": 7,
-            "duration_ms": 7000
-        }
+            "duration_ms": 7000,
+            "servo_id": 0,
+        },
     ]
 
     def __init__(self, path="config/colors.json"):
@@ -103,6 +110,7 @@ class ColorConfig:
                 "upper":       item.get("upper",       base["upper"]),
                 "action_id":   item.get("action_id",   base["action_id"]),
                 "duration_ms": item.get("duration_ms", base["duration_ms"]),
+                "servo_id":    item.get("servo_id",    base.get("servo_id", 0)),
             }
             output.append(merged)
         return output
