@@ -98,8 +98,8 @@ class ColorDetector:
                     lower=obj.lower,
                     upper=obj.upper,
                     bgr=obj.bgr,
-                    action_id=obj.action_id,
                     duration_ms=obj.duration_ms,
+                    servo_id=obj.servo_id,
                 )
                 detected.x, detected.y, detected.w, detected.h = x, y, w, h
                 detections.append((x, y, w, h, detected))
