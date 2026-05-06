@@ -445,6 +445,29 @@
         }
 
         /* ═══════════════════════════════════════════════════════
+           CONVEYOR CYCLE CARD
+        ═══════════════════════════════════════════════════════ */
+        .cycle-input {
+            background: var(--bg); color: var(--fg);
+            border: 1px solid var(--border); border-radius: 4px;
+            outline: none; font-size: 0.78rem; font-family: 'Fira Mono', monospace;
+            padding: 3px 6px; width: 72px; text-align: right;
+            transition: border-color 0.15s;
+        }
+        .cycle-input:focus { border-color: var(--primary); }
+        .cycle-unit { font-size: 0.67rem; color: var(--fg-subtle); margin-left: 4px; }
+        .cycle-progress-track {
+            height: 4px; background: var(--bg-muted);
+            border-radius: 2px; overflow: hidden;
+            margin: 0 13px 10px;
+        }
+        .cycle-progress-bar {
+            height: 100%; width: 0%;
+            border-radius: 2px;
+            transition: width 0.1s linear, background 0.3s;
+        }
+
+        /* ═══════════════════════════════════════════════════════
            UART LOG
         ═══════════════════════════════════════════════════════ */
         #uart-log { font-family: 'Fira Mono', 'Consolas', monospace; }
@@ -883,6 +906,52 @@
                     <button id="btn-save-color" class="sf-btn sf-btn-primary sf-btn-sm flex-1">
                         <i class="fas fa-floppy-disk"></i>
                         <span data-i18n="color.save">Save</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ─ Conveyor Cycle ─────────────────────────── -->
+            <div class="sf-card">
+                <div class="sf-card-header">
+                    <i class="fas fa-rotate"></i>
+                    <span data-i18n="cycle.title">Chu kỳ băng tải</span>
+                    <span id="cycle-status-badge" class="ml-auto uart-state-badge uart-state-off">OFF</span>
+                </div>
+                <!-- Run / Stop time inputs -->
+                <div class="sf-kv-row">
+                    <span class="sf-kv-label" data-i18n="cycle.run">Thời gian chạy</span>
+                    <span style="display:flex; align-items:center;">
+                        <input id="cycle-run-ms" type="number" class="cycle-input"
+                               value="3000" min="500" max="60000" step="500">
+                        <span class="cycle-unit">ms</span>
+                    </span>
+                </div>
+                <div class="sf-kv-row">
+                    <span class="sf-kv-label" data-i18n="cycle.stop">Thời gian dừng</span>
+                    <span style="display:flex; align-items:center;">
+                        <input id="cycle-stop-ms" type="number" class="cycle-input"
+                               value="2000" min="500" max="60000" step="500">
+                        <span class="cycle-unit">ms</span>
+                    </span>
+                </div>
+                <!-- Phase + countdown (visible only when running) -->
+                <div id="cycle-info-row" style="display:none;">
+                    <div class="sf-kv-row">
+                        <span class="sf-kv-label" data-i18n="cycle.phase">Pha</span>
+                        <span class="sf-kv-value" style="display:flex; align-items:center; gap:8px;">
+                            <span id="cycle-phase-label">—</span>
+                            <span id="cycle-countdown" style="color:var(--fg-subtle); font-size:0.72rem;">—</span>
+                        </span>
+                    </div>
+                    <div class="cycle-progress-track">
+                        <div id="cycle-progress-bar" class="cycle-progress-bar"></div>
+                    </div>
+                </div>
+                <!-- Toggle button -->
+                <div class="p-3" style="border-top:1px solid var(--border);">
+                    <button id="btn-cycle-toggle" class="sf-btn sf-btn-primary" style="width:100%;">
+                        <i id="btn-cycle-icon" class="fas fa-play"></i>
+                        <span id="btn-cycle-label" data-i18n="cycle.start">Bắt đầu chu kỳ</span>
                     </button>
                 </div>
             </div>

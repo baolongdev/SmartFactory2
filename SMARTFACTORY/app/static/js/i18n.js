@@ -65,6 +65,16 @@ const TRANSLATIONS = {
         "color.loading":    "Đang tải...",
         "color.empty":      "Chưa có màu nào",
 
+        // Conveyor cycle card
+        "cycle.title":      "Chu kỳ băng tải",
+        "cycle.run":        "Thời gian chạy",
+        "cycle.stop":       "Thời gian dừng",
+        "cycle.start":      "Bắt đầu chu kỳ",
+        "cycle.stop_btn":   "Dừng chu kỳ",
+        "cycle.phase":      "Pha",
+        "cycle.phase.run":  "CHẠY",
+        "cycle.phase.stop": "DỪNG",
+
         // UART log card
         "uart.title":       "Nhật ký UART",
         "uart.empty":       "Chưa có dữ liệu...",
@@ -144,6 +154,16 @@ const TRANSLATIONS = {
         "color.loading":    "Loading...",
         "color.empty":      "No colors configured",
 
+        // Conveyor cycle card
+        "cycle.title":      "Conveyor Cycle",
+        "cycle.run":        "Run time",
+        "cycle.stop":       "Stop time",
+        "cycle.start":      "Start cycle",
+        "cycle.stop_btn":   "Stop cycle",
+        "cycle.phase":      "Phase",
+        "cycle.phase.run":  "RUNNING",
+        "cycle.phase.stop": "STOPPED",
+
         "uart.title":       "UART Log",
         "uart.empty":       "No data yet...",
 
@@ -217,6 +237,16 @@ const TRANSLATIONS = {
         "color.save":       "保存",
         "color.loading":    "読込中...",
         "color.empty":      "色が設定されていません",
+
+        // Conveyor cycle card
+        "cycle.title":      "コンベアサイクル",
+        "cycle.run":        "動作時間",
+        "cycle.stop":       "停止時間",
+        "cycle.start":      "サイクル開始",
+        "cycle.stop_btn":   "サイクル停止",
+        "cycle.phase":      "フェーズ",
+        "cycle.phase.run":  "動作中",
+        "cycle.phase.stop": "停止中",
 
         "uart.title":       "UARTログ",
         "uart.empty":       "データなし...",
