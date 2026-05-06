@@ -2,13 +2,22 @@
 .env
 .env.local
 .env.*.local
+*.pem
+*.key
+secrets.json
 
-# ── Python ─────────────────────────────────────────────────────────
+# ── Python bytecode ─────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
 *.pyo
 *.pyd
+*.pyc
+
+# ── C extensions ────────────────────────────────────────────────────
 *.so
+*.pyd
+
+# ── Distribution / packaging ────────────────────────────────────────
 *.egg
 *.egg-info/
 dist/
@@ -16,12 +25,14 @@ build/
 .eggs/
 pip-wheel-metadata/
 MANIFEST
+*.whl
 
 # ── Virtual environments ────────────────────────────────────────────
 venv/
 .venv/
 env/
 ENV/
+.python-version
 
 # ── IDE / Editor ────────────────────────────────────────────────────
 .vscode/
@@ -29,15 +40,19 @@ ENV/
 *.swp
 *.swo
 *~
+*.orig
 
 # ── OS junk ─────────────────────────────────────────────────────────
 .DS_Store
 Thumbs.db
 desktop.ini
+ehthumbs.db
+$RECYCLE.BIN/
 
 # ── Logs ────────────────────────────────────────────────────────────
 *.log
 logs/
+log/
 
 # ── Claude Code internal ─────────────────────────────────────────────
 .claude/
@@ -45,8 +60,39 @@ logs/
 # ── Test / Coverage ──────────────────────────────────────────────────
 .pytest_cache/
 .coverage
+.coverage.*
 htmlcov/
 .tox/
+nosetests.xml
+coverage.xml
+*.cover
 
 # ── Jupyter ─────────────────────────────────────────────────────────
 .ipynb_checkpoints/
+*.ipynb
+
+# ── Type checking ────────────────────────────────────────────────────
+.mypy_cache/
+.dmypy.json
+.pyright/
+
+# ── Flask / Werkzeug ─────────────────────────────────────────────────
+instance/
+flask_session/
+
+# ── Runtime / temp ───────────────────────────────────────────────────
+tmp/
+temp/
+*.tmp
+*.bak
+*.pid
+
+# ── Media / uploads ──────────────────────────────────────────────────
+uploads/
+*.mp4
+*.avi
+*.mkv
+*.mov
+# Keep sample images but ignore large datasets
+data/
+dataset/
